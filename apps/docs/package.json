@@ -1,0 +1,27 @@
+{
+  "name": "@tile-mate/docs",
+  "type": "module",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "prepreview": "npm run build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "^4.3.3",
+    "@astrojs/react": "^4.3.0",
+    "@codesandbox/sandpack-react": "^2.20.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "astro": "^5.13.0",
+    "highlight.js": "^11.11.1",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "vitest": "^3.2.4"
+  }
+}
