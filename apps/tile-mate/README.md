@@ -1,72 +1,36 @@
-# Tile Mate
+## Usage
 
-A modern SolidJS TypeScript Single Page Application built with Vite.
+Those templates dependencies are maintained via [pnpm](https://pnpm.io) via `pnpm up -Lri`.
 
-## Features
-
-- ⚡️ SolidJS for reactive UI
-- 🏗️ TypeScript for type safety
-- 📦 Vite for fast development and building
-- 🎨 CSS Modules for styling
-- 🧪 Vitest for testing
-- 📏 ESLint + Prettier for code quality
-- 🔥 Hot Module Replacement
-
-## Getting Started
-
-### Prerequisites
-
-- Node.js (v18 or higher)
-- npm or yarn
-
-### Installation
+This is the reason you see a `pnpm-lock.yaml`. That being said, any package manager will work. This file can be safely be removed once you clone a template.
 
 ```bash
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
+$ npm install # or pnpm install or yarn install
 ```
 
-### Available Scripts
+### Learn more on the [Solid Website](https://solidjs.com) and come chat with us on our [Discord](https://discord.com/invite/solidjs)
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run type-check` - Run TypeScript type checking
-- `npm run lint` - Run ESLint
-- `npm run format` - Format code with Prettier
-- `npm test` - Run tests
+## Available Scripts
 
-## Project Structure
+In the project directory, you can run:
 
-```
-src/
-├── assets/          # Static assets
-├── components/      # Reusable components
-├── App.tsx         # Main App component
-├── App.module.css  # App styles
-├── index.tsx       # Application entry point
-├── index.css       # Global styles
-└── vite-env.d.ts   # Vite type definitions
-```
+### `npm run dev` or `npm start`
 
-## Technologies Used
+Runs the app in the development mode.<br>
+Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-- [SolidJS](https://www.solidjs.com/) - Reactive JavaScript library
-- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
-- [Vite](https://vitejs.dev/) - Build tool
-- [Vitest](https://vitest.dev/) - Testing framework
-- [ESLint](https://eslint.org/) - Linting
-- [Prettier](https://prettier.io/) - Code formatting
+The page will reload if you make edits.<br>
 
-## License
+### `npm run build`
 
-MIT
+Builds the app for production to the `dist` folder.<br>
+It correctly bundles Solid in production mode and optimizes the build for the best performance.
+
+The build is minified and the filenames include the hashes.<br>
+Your app is ready to be deployed!
+
+## Deployment
+
+You can deploy the `dist` folder to any static host provider (netlify, surge, now, etc.)
+
+## This project was created with the [Solid CLI](https://github.com/solidjs-community/solid-cli)
