@@ -7,6 +7,7 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
+    "preserve": "npm run build",
     "serve": "vite preview"
   },
   "license": "MIT",
