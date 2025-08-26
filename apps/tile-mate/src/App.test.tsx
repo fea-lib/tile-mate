@@ -18,12 +18,12 @@ test('counter functionality works', async () => {
   const { getByText, getByRole } = render(() => <App />);
   const button = getByRole('button');
   const countText = getByText(/count is 0/i);
-  
+
   expect(countText).toBeInTheDocument();
-  
+
   // Click the button
   button.click();
-  
+
   // Check if count increased
   expect(getByText(/count is 1/i)).toBeInTheDocument();
 });
