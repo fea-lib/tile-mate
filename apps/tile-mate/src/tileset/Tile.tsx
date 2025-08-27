@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import { TileId, useTilesetContext } from "./TilesetContext";
 import { useTilesetEditorContext, DropMode } from "./TilesetEditorContext";
-import { useDragAndDrop } from "../../hooks/useDrag";
+import { useDragAndDrop } from "../common/drag/useDrag";
 import staticStyles from "./Tile.module.css";
 
 type Props = {
@@ -20,37 +20,29 @@ export const Tile: Component<Props> = (props) => {
   } = useTilesetContext();
   const editorContext = useTilesetEditorContext();
 
-  const { onPointerDown } = useDragAndDrop({
+  const { onPointerDown, dragState } = useDragAndDrop({
     onPickUp: () => {
       setSelectedTile(props.id);
-      editorContext.startDrag(props.id);
     },
-    onDrag: ({ over }) => {
-      const tileElement = over.closest("[data-tile-id]") as HTMLElement;
-      if (tileElement) {
-        const targetId = parseInt(tileElement.dataset.tileId || "0");
-        editorContext.updateDragTarget(targetId);
-      }
-    },
-    onDrop: () => {
-      const dragState = editorContext.dragState();
-      const mode = editorContext.mode();
+    onDrop: (hoveringElement) => {
+      if (hoveringElement) {
+        const tileElement = hoveringElement.closest(
+          "[data-tile-id]"
+        ) as HTMLElement;
+        if (tileElement) {
+          const targetId = parseInt(tileElement.dataset.tileId || "0");
+          const mode = editorContext.mode();
 
-      if (dragState.draggedTile !== null && dragState.targetTile !== null) {
-        const sourceId = dragState.draggedTile;
-        const targetId = dragState.targetTile;
-
-        // Don't do anything if source and target are the same
-        if (sourceId !== targetId) {
-          if (mode === DropMode.Replace) {
-            replaceTile(targetId, sourceId);
-          } else if (mode === DropMode.Swap) {
-            swapTiles(sourceId, targetId);
+          // Don't do anything if source and target are the same
+          if (props.id !== targetId) {
+            if (mode === DropMode.Replace) {
+              replaceTile(targetId, props.id);
+            } else if (mode === DropMode.Swap) {
+              swapTiles(props.id, targetId);
+            }
           }
         }
       }
-
-      editorContext.endDrag();
     },
   });
 
@@ -59,20 +51,22 @@ export const Tile: Component<Props> = (props) => {
   };
 
   const isDragOrigin = () => {
-    const drag = editorContext.dragState();
-    return drag.isDragging && drag.draggedTile === props.id;
+    const drag = dragState();
+    return (
+      drag.isDragging &&
+      (drag.draggedElement as HTMLElement)?.dataset?.tileId ===
+        props.id.toString()
+    );
   };
 
   const isDragTarget = () => {
-    const drag = editorContext.dragState();
-    return drag.isDragging && drag.targetTile === props.id;
-  };
-
-  const handlePointerEnter = () => {
-    const drag = editorContext.dragState();
-    if (drag.isDragging) {
-      editorContext.updateDragTarget(props.id);
-    }
+    const drag = dragState();
+    const hoveringTile = drag.hoveringElement?.closest(
+      "[data-tile-id]"
+    ) as HTMLElement;
+    return (
+      drag.isDragging && hoveringTile?.dataset?.tileId === props.id.toString()
+    );
   };
 
   const tileData = tile(props.id);
@@ -87,7 +81,6 @@ export const Tile: Component<Props> = (props) => {
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
         on:click={() => setSelectedTile(props.id)}
         on:pointerdown={onPointerDown}
-        on:pointerenter={handlePointerEnter}
       ></span>
     );
   }
@@ -103,7 +96,6 @@ export const Tile: Component<Props> = (props) => {
       } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
       on:click={() => setSelectedTile(props.id)}
       on:pointerdown={onPointerDown}
-      on:pointerenter={handlePointerEnter}
     />
   );
 };

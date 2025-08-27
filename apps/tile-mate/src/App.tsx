@@ -1,6 +1,6 @@
 import type { Component } from "solid-js";
 import tilesetImage from "./tileset.png";
-import { TilesetEditor } from "./components/tileset/TilesetEditor";
+import { TilesetEditor } from "./tileset/TilesetEditor";
 
 const tileSize = 48;
 

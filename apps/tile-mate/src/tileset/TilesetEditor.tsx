@@ -5,10 +5,11 @@ import {
   TilesetEditorContextProvider,
   useTilesetEditorContext,
 } from "./TilesetEditorContext";
+import { DragContextProvider } from "../common/drag/DragContext";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
-import { Toggle } from "../toggle/Toggle";
-import { ToggleGroup } from "../toggle/ToggleGroup";
+import { Toggle } from "../common/toggle/Toggle";
+import { ToggleGroup } from "../common/toggle/ToggleGroup";
 
 type Props = {
   tilesetImage: string;
@@ -23,14 +24,16 @@ export const TilesetEditor: Component<Props> = ({
 }) => {
   return (
     <TilesetEditorContextProvider>
-      <TilesetContextProvider tileSize={tileSize} tilesetImage={tilesetImage}>
-        <div class={staticStyles.tilesetEditor}>
-          <Actions />
-          <div class={staticStyles.tilesets}>
-            <Tileset showGrid={showGrid} />
+      <DragContextProvider>
+        <TilesetContextProvider tileSize={tileSize} tilesetImage={tilesetImage}>
+          <div class={staticStyles.tilesetEditor}>
+            <Actions />
+            <div class={staticStyles.tilesets}>
+              <Tileset showGrid={showGrid} />
+            </div>
           </div>
-        </div>
-      </TilesetContextProvider>
+        </TilesetContextProvider>
+      </DragContextProvider>
     </TilesetEditorContextProvider>
   );
 };
