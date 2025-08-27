@@ -24,6 +24,11 @@ type TilesetEditorState = {
   selectMode: (mode: DropMode) => void;
   dragState: () => DragState;
   setDragState: (state: DragState) => void;
+  // Drag handlers
+  startDrag: (tileId: TileId) => void;
+  updateDragTarget: (tileId: TileId) => void;
+  endDrag: () => void;
+  cancelDrag: () => void;
 };
 
 const TilesetEditorContext = createContext<TilesetEditorState>();
@@ -40,11 +45,49 @@ export const TilesetEditorContextProvider: Component<Props> = (props) => {
     targetTile: null,
   });
 
+  const startDrag = (tileId: TileId) => {
+    setDragState({
+      isDragging: true,
+      draggedTile: tileId,
+      targetTile: null,
+    });
+  };
+
+  const updateDragTarget = (tileId: TileId) => {
+    const current = dragState();
+    if (current.isDragging) {
+      setDragState({
+        ...current,
+        targetTile: tileId,
+      });
+    }
+  };
+
+  const endDrag = () => {
+    setDragState({
+      isDragging: false,
+      draggedTile: null,
+      targetTile: null,
+    });
+  };
+
+  const cancelDrag = () => {
+    setDragState({
+      isDragging: false,
+      draggedTile: null,
+      targetTile: null,
+    });
+  };
+
   const value = {
     mode,
     selectMode,
     dragState,
     setDragState,
+    startDrag,
+    updateDragTarget,
+    endDrag,
+    cancelDrag,
   };
 
   return (

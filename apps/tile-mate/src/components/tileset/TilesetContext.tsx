@@ -9,11 +9,16 @@ import {
 
 export type TileId = number;
 
-export type Tile = {
-  id: TileId;
-  imgX: number;
-  imgY: number;
-};
+export type Tile =
+  | {
+      id: TileId;
+      imgX: number;
+      imgY: number;
+    }
+  | {
+      // Empty Tile
+      id: TileId;
+    };
 
 type TilesetState = {
   tilesetImage: string;
@@ -26,6 +31,8 @@ type TilesetState = {
   setRows: (rows: number) => void;
   selectedTile: () => TileId | null;
   setSelectedTile: (id: TileId | null) => void;
+  replaceTile: (targetId: TileId, sourceId: TileId) => void;
+  swapTiles: (tileId1: TileId, tileId2: TileId) => void;
 };
 
 const TilesetContext = createContext<TilesetState>();
@@ -76,6 +83,47 @@ export const TilesetContextProvider: Component<Props> = (props) => {
 
   const tile = (id: TileId) => tiles()[id];
 
+  const replaceTile = (targetId: TileId, sourceId: TileId) => {
+    const currentTiles = [...tiles()];
+    const sourceTile = currentTiles[sourceId];
+    if (sourceTile) {
+      // Replace target with source tile's image position
+      currentTiles[targetId] = {
+        ...sourceTile,
+        id: currentTiles[targetId].id,
+      };
+
+      // Reset source to its original position (identity)
+      const sourceX = sourceId % columns();
+      const sourceY = Math.floor(sourceId / columns());
+      currentTiles[sourceId] = {
+        id: currentTiles[sourceId].id,
+      };
+      setTiles(currentTiles);
+    }
+  };
+
+  const swapTiles = (tileId1: TileId, tileId2: TileId) => {
+    const currentTiles = [...tiles()];
+    const tile1 = { ...currentTiles[tileId1] };
+    const tile2 = { ...currentTiles[tileId2] };
+
+    if (tile1 && tile2) {
+      // Swap the tiles
+      currentTiles[tileId1] = {
+        ...tile2,
+        id: tileId1,
+      };
+
+      currentTiles[tileId2] = {
+        ...tile1,
+        id: tileId2,
+      };
+
+      setTiles(currentTiles);
+    }
+  };
+
   const value = {
     tilesetImage: props.tilesetImage,
     tileSize: props.tileSize,
@@ -88,6 +136,8 @@ export const TilesetContextProvider: Component<Props> = (props) => {
     tile,
     selectedTile,
     setSelectedTile,
+    replaceTile,
+    swapTiles,
   };
 
   return (

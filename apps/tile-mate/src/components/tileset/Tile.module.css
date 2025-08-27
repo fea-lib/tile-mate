@@ -17,3 +17,19 @@
     outline-color: magenta;
   }
 }
+
+.dragTarget {
+  outline: 2px solid yellow;
+  outline-offset: -2px;
+  animation: pulseDragTarget 0.5s ease-in-out infinite;
+}
+
+@keyframes pulseDragTarget {
+  0%,
+  100% {
+    outline-color: yellow;
+  }
+  50% {
+    outline-color: orange;
+  }
+}
