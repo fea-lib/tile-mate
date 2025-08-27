@@ -8,7 +8,7 @@ type Props = {
 };
 
 export const Tileset: Component<Props> = ({ showGrid = false }) => {
-  const { tileSize, columns, rows } = useTilesetContext();
+  const { tileSize, columns, rows, tiles } = useTilesetContext();
 
   const grid = toGridOptions(showGrid);
 
@@ -22,8 +22,8 @@ export const Tileset: Component<Props> = ({ showGrid = false }) => {
         rows: rows(),
       })}
     >
-      {Array.from({ length: columns() * rows() }).map((_, i) => (
-        <Tile x={i % columns()} y={Math.floor(i / columns())} />
+      {tiles().map(({ id }) => (
+        <Tile id={id} />
       ))}
     </div>
   );

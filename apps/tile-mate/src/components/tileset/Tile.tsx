@@ -1,38 +1,44 @@
 import type { Component } from "solid-js";
-import { useTilesetContext } from "./TilesetContext";
+import {
+  type Tile as TileData,
+  TileId,
+  useTilesetContext,
+} from "./TilesetContext";
 import staticStyles from "./Tile.module.css";
 
 type Props = {
-  x: number;
-  y: number;
+  id: TileId;
 };
 
 export const Tile: Component<Props> = (props) => {
-  const { tilesetImage, tileSize, selectedTile, setSelectedTile } =
+  const { tilesetImage, tileSize, selectedTile, setSelectedTile, tile } =
     useTilesetContext();
 
   const isSelected = () => {
-    const selected = selectedTile();
-    return selected && selected.x === props.x && selected.y === props.y;
+    return selectedTile() === props.id;
   };
 
   return (
     <img
       src={tilesetImage}
-      alt={`Tile ${props.x},${props.y}`}
-      style={getDynamicStyles({ ...props, size: tileSize })}
+      alt={`Tile ${props.id}`}
+      style={getDynamicStyles({ ...tile(props.id), size: tileSize })}
       class={`${staticStyles.tile} ${
         isSelected() ? staticStyles.selected : ""
       }`}
-      on:click={() => setSelectedTile({ x: props.x, y: props.y })}
+      on:click={() => setSelectedTile(props.id)}
     />
   );
 };
 
-function getDynamicStyles({ x, y, size }: Props & { size: number }) {
+function getDynamicStyles({
+  imgX,
+  imgY,
+  size,
+}: Pick<TileData, "imgX" | "imgY"> & { size: number }) {
   return `
     width: ${size}px;
     height: ${size}px;
-    object-position: -${x * size}px -${y * size}px;
+    object-position: -${imgX * size}px -${imgY * size}px;
   `;
 }

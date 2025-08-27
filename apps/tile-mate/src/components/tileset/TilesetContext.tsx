@@ -7,15 +7,25 @@ import {
   createEffect,
 } from "solid-js";
 
+export type TileId = number;
+
+export type Tile = {
+  id: TileId;
+  imgX: number;
+  imgY: number;
+};
+
 type TilesetState = {
   tilesetImage: string;
   tileSize: number;
+  tiles: () => Tile[];
+  tile: (id: TileId) => Tile | undefined;
   columns: () => number;
   setColumns: (cols: number) => void;
   rows: () => number;
   setRows: (rows: number) => void;
-  selectedTile: () => { x: number; y: number } | null;
-  setSelectedTile: (tile: { x: number; y: number } | null) => void;
+  selectedTile: () => TileId | null;
+  setSelectedTile: (id: TileId | null) => void;
 };
 
 const TilesetContext = createContext<TilesetState>();
@@ -24,22 +34,16 @@ type Props = {
   children: JSX.Element;
   tilesetImage: string;
   tileSize: number;
-  columns?: number;
-  rows?: number;
 };
 
 export const TilesetContextProvider: Component<Props> = (props) => {
   const [isLoading, setIsLoading] = createSignal<boolean>(false);
-  const [columns, setColumns] = createSignal<number>(props.columns ?? 0);
-  const [rows, setRows] = createSignal<number>(props.rows ?? 0);
-  const [selectedTile, setSelectedTile] = createSignal<{
-    x: number;
-    y: number;
-  } | null>(null);
+  const [columns, setColumns] = createSignal<number>(0);
+  const [rows, setRows] = createSignal<number>(0);
+  const [tiles, setTiles] = createSignal<Tile[]>([]);
+  const [selectedTile, setSelectedTile] = createSignal<TileId | null>(null);
 
   createEffect(() => {
-    if (props.columns && props.rows) return;
-
     setIsLoading(true);
     const img = new Image();
 
@@ -50,6 +54,15 @@ export const TilesetContextProvider: Component<Props> = (props) => {
       // Use provided dimensions or calculate from image
       setColumns(calculatedColumns);
       setRows(calculatedRows);
+
+      const newTiles: Tile[] = [];
+      for (let y = 0; y < calculatedRows; y++) {
+        for (let x = 0; x < calculatedColumns; x++) {
+          newTiles.push({ id: newTiles.length, imgX: x, imgY: y });
+        }
+      }
+      setTiles(newTiles);
+
       setIsLoading(false);
     };
 
@@ -61,14 +74,18 @@ export const TilesetContextProvider: Component<Props> = (props) => {
     img.src = props.tilesetImage;
   });
 
+  const tile = (id: TileId) => tiles()[id];
+
   const value = {
-    isLoading,
     tilesetImage: props.tilesetImage,
+    tileSize: props.tileSize,
+    isLoading,
     columns,
     setColumns,
     rows,
     setRows,
-    tileSize: props.tileSize,
+    tiles,
+    tile,
     selectedTile,
     setSelectedTile,
   };
