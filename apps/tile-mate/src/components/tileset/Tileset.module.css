@@ -1,4 +1,5 @@
 .tileset {
   background-color: magenta;
   display: inline-grid;
+  overflow: auto;
 }

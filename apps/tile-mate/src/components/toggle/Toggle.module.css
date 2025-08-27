@@ -1,0 +1,36 @@
+.toggle {
+  display: inline-block;
+  border: 1px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+}
+.toggle input[type="radio"] {
+  display: none;
+}
+
+.toggle span {
+  display: inline-block;
+  padding: 2px 16px;
+  border: 1px solid;
+  border-color: #d9d9d9 #888888 #888888 #d9d9d9;
+  background-color: #c0c0c0;
+  color: #000000;
+  font-family: "MS Sans Serif", sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  min-width: 60px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+.toggle span:hover {
+  background-color: #d4d4d4;
+}
+
+.toggle input[type="radio"]:checked + span {
+  background-color: #a0a0a0;
+  border-color: #888888 #d9d9d9 #d9d9d9 #888888;
+}
+
+.toggle:has(input[type="radio"]:checked) {
+  border-color: #000000 #ffffff #ffffff #000000;
+}
