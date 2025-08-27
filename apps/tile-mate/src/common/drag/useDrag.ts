@@ -1,7 +1,7 @@
 import { useDragContext } from "./DragContext";
 
 type DragCallbacks = {
-  onPickUp?: () => void;
+  onPickUp?: (element: Element) => void;
   onDrop?: (hoveringElement: Element | null) => void;
 };
 
@@ -12,18 +12,18 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
   const onPointerDown = (e: PointerEvent) => {
     e.preventDefault();
 
-    const startElement = e.currentTarget as Element;
+    const draggedElement = e.currentTarget as Element;
 
     // Call pickup callback
-    onPickUp?.();
+    onPickUp?.(draggedElement);
 
     // Start drag in context
-    dragContext.startDrag(startElement);
+    dragContext.pickUp(draggedElement);
 
     const handlePointerMove = (e: PointerEvent) => {
       // Find the element under the pointer
-      const element = document.elementFromPoint(e.clientX, e.clientY);
-      dragContext.updateHover(element);
+      const hoveringElement = document.elementFromPoint(e.clientX, e.clientY);
+      dragContext.drag(hoveringElement);
     };
 
     const handlePointerUp = () => {
@@ -33,7 +33,7 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
       onDrop?.(currentState.hoveringElement);
 
       // End drag in context
-      dragContext.endDrag();
+      dragContext.drop();
 
       // Clean up listeners
       document.removeEventListener("pointermove", handlePointerMove);

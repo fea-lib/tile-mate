@@ -15,9 +15,9 @@ type DragState = {
 type DragContextState = {
   dragState: () => DragState;
   setDragState: (state: DragState) => void;
-  startDrag: (element: Element) => void;
-  updateHover: (element: Element | null) => void;
-  endDrag: () => void;
+  pickUp: (element: Element) => void;
+  drag: (element: Element | null) => void;
+  drop: () => void;
 };
 
 const DragContext = createContext<DragContextState>();
@@ -33,25 +33,25 @@ export const DragContextProvider: Component<Props> = (props) => {
     hoveringElement: null,
   });
 
-  const startDrag = (element: Element) => {
+  const pickUp = (draggedElement: Element) => {
     setDragState({
       isDragging: true,
-      draggedElement: element,
+      draggedElement,
       hoveringElement: null,
     });
   };
 
-  const updateHover = (element: Element | null) => {
+  const drag = (hoveringElement: Element | null) => {
     const current = dragState();
     if (current.isDragging) {
       setDragState({
         ...current,
-        hoveringElement: element,
+        hoveringElement,
       });
     }
   };
 
-  const endDrag = () => {
+  const drop = () => {
     setDragState({
       isDragging: false,
       draggedElement: null,
@@ -62,15 +62,13 @@ export const DragContextProvider: Component<Props> = (props) => {
   const value = {
     dragState,
     setDragState,
-    startDrag,
-    updateHover,
-    endDrag,
+    pickUp,
+    drag,
+    drop,
   };
 
   return (
-    <DragContext.Provider value={value}>
-      {props.children}
-    </DragContext.Provider>
+    <DragContext.Provider value={value}>{props.children}</DragContext.Provider>
   );
 };
 

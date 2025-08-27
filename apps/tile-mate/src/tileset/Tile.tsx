@@ -26,9 +26,9 @@ export const Tile: Component<Props> = (props) => {
     },
     onDrop: (hoveringElement) => {
       if (hoveringElement) {
-        const tileElement = hoveringElement.closest(
-          "[data-tile-id]"
-        ) as HTMLElement;
+        const tileElement: HTMLElement | undefined =
+          hoveringElement.closest("[data-tile-id]");
+
         if (tileElement) {
           const targetId = parseInt(tileElement.dataset.tileId || "0");
           const mode = editorContext.mode();
@@ -52,6 +52,7 @@ export const Tile: Component<Props> = (props) => {
 
   const isDragOrigin = () => {
     const drag = dragState();
+
     return (
       drag.isDragging &&
       (drag.draggedElement as HTMLElement)?.dataset?.tileId ===
@@ -61,9 +62,9 @@ export const Tile: Component<Props> = (props) => {
 
   const isDragTarget = () => {
     const drag = dragState();
-    const hoveringTile = drag.hoveringElement?.closest(
-      "[data-tile-id]"
-    ) as HTMLElement;
+    const hoveringTile: HTMLElement | undefined =
+      drag.hoveringElement?.closest("[data-tile-id]");
+
     return (
       drag.isDragging && hoveringTile?.dataset?.tileId === props.id.toString()
     );
