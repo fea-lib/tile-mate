@@ -1,0 +1,19 @@
+.tile {
+  object-fit: none;
+}
+
+.selected {
+  outline: 2px solid yellow;
+  outline-offset: -2px;
+  animation: pulseOutline 0.8s ease-in-out infinite;
+}
+
+@keyframes pulseOutline {
+  0%,
+  100% {
+    outline-color: yellow;
+  }
+  50% {
+    outline-color: magenta;
+  }
+}

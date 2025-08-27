@@ -1,5 +1,6 @@
 import type { Component } from "solid-js";
 import { useTilesetContext } from "./TilesetContext";
+import staticStyles from "./Tile.module.css";
 
 type Props = {
   x: number;
@@ -19,23 +20,19 @@ export const Tile: Component<Props> = (props) => {
     <img
       src={tilesetImage}
       alt={`Tile ${props.x},${props.y}`}
-      style={getStyle({ ...props, size: tileSize, isSelected: isSelected() })}
+      style={getDynamicStyles({ ...props, size: tileSize })}
+      class={`${staticStyles.tile} ${
+        isSelected() ? staticStyles.selected : ""
+      }`}
       on:click={() => setSelectedTile({ x: props.x, y: props.y })}
     />
   );
 };
 
-function getStyle({
-  x,
-  y,
-  size,
-  isSelected,
-}: Props & { size: number; isSelected: boolean }) {
+function getDynamicStyles({ x, y, size }: Props & { size: number }) {
   return `
     width: ${size}px;
     height: ${size}px;
-    object-fit: none;
     object-position: -${x * size}px -${y * size}px;
-    ${isSelected ? "outline: 2px solid blue; outline-offset: -2px" : ""}
   `;
 }

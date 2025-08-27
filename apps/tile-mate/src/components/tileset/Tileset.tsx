@@ -1,6 +1,7 @@
 import type { Component } from "solid-js";
 import { Tile } from "./Tile";
 import { useTilesetContext } from "./TilesetContext";
+import staticStyles from "./Tileset.module.css";
 
 type Props = {
   showGrid?: boolean | { color?: string; gap?: number };
@@ -12,7 +13,15 @@ export const Tileset: Component<Props> = ({ showGrid = false }) => {
   const grid = toGridOptions(showGrid);
 
   return (
-    <div style={getStyle({ grid, tileSize, columns: columns(), rows: rows() })}>
+    <div
+      class={staticStyles.tileset}
+      style={getDynamicStyle({
+        grid,
+        tileSize,
+        columns: columns(),
+        rows: rows(),
+      })}
+    >
       {Array.from({ length: columns() * rows() }).map((_, i) => (
         <Tile x={i % columns()} y={Math.floor(i / columns())} />
       ))}
@@ -20,7 +29,7 @@ export const Tileset: Component<Props> = ({ showGrid = false }) => {
   );
 };
 
-function getStyle({
+function getDynamicStyle({
   grid,
   tileSize,
   columns,
@@ -32,8 +41,6 @@ function getStyle({
   grid: GridOptions;
 }) {
   return `
-    background-color: magenta;
-    display: inline-grid;
     grid-template-columns: repeat(${columns}, ${tileSize}px);
     grid-template-rows: repeat(${rows}, ${tileSize}px);
     ${grid ? `gap: ${grid.gap}; background-color: ${grid.color};` : ""}
