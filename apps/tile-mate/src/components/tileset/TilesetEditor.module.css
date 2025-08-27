@@ -1,0 +1,13 @@
+.tilesetEditor {
+  display: inline-flex;
+  flex-direction: column;
+}
+
+.tileset {
+  overflow: auto;
+}
+
+.actions {
+  display: flex;
+  justify-content: center;
+}

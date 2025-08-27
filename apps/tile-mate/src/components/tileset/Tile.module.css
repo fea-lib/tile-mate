@@ -3,7 +3,7 @@
 }
 
 .selected {
-  outline: 2px solid yellow;
+  outline: 2px solid #00ff00;
   outline-offset: -2px;
   animation: pulseOutline 0.8s ease-in-out infinite;
 }
@@ -11,7 +11,7 @@
 @keyframes pulseOutline {
   0%,
   100% {
-    outline-color: yellow;
+    outline-color: #00ff00;
   }
   50% {
     outline-color: magenta;
