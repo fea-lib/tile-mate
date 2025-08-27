@@ -17,7 +17,7 @@ export const Tile: Component<Props> = (props) => {
 
   return (
     <img
-      src={tilesetImage()}
+      src={tilesetImage}
       alt={`Tile ${props.x},${props.y}`}
       style={getStyle({ ...props, size: tileSize, isSelected: isSelected() })}
       on:click={() => setSelectedTile({ x: props.x, y: props.y })}

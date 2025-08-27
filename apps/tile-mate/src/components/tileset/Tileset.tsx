@@ -1,37 +1,22 @@
 import type { Component } from "solid-js";
 import { Tile } from "./Tile";
-import { TilesetContextProvider } from "./TilesetContext";
+import { useTilesetContext } from "./TilesetContext";
 
 type Props = {
-  columns: number;
-  rows: number;
-  tilesetImage: string;
-  tileSize: number;
   showGrid?: boolean | { color?: string; gap?: number };
 };
 
-export const Tileset: Component<Props> = ({
-  columns,
-  rows,
-  tilesetImage,
-  tileSize,
-  showGrid = false,
-}) => {
+export const Tileset: Component<Props> = ({ showGrid = false }) => {
+  const { tileSize, columns, rows } = useTilesetContext();
+
   const grid = toGridOptions(showGrid);
 
   return (
-    <TilesetContextProvider
-      columns={columns}
-      rows={rows}
-      tileSize={tileSize}
-      tilesetImage={tilesetImage}
-    >
-      <div style={getStyle({ grid, tileSize, columns, rows })}>
-        {Array.from({ length: columns * rows }).map((_, i) => (
-          <Tile x={i % columns} y={Math.floor(i / columns)} />
-        ))}
-      </div>
-    </TilesetContextProvider>
+    <div style={getStyle({ grid, tileSize, columns: columns(), rows: rows() })}>
+      {Array.from({ length: columns() * rows() }).map((_, i) => (
+        <Tile x={i % columns()} y={Math.floor(i / columns())} />
+      ))}
+    </div>
   );
 };
 
@@ -40,7 +25,12 @@ function getStyle({
   tileSize,
   columns,
   rows,
-}: Pick<Props, "tileSize" | "columns" | "rows"> & { grid: GridOptions }) {
+}: {
+  tileSize: number;
+  columns: number;
+  rows: number;
+  grid: GridOptions;
+}) {
   return `
     background-color: magenta;
     display: inline-grid;
