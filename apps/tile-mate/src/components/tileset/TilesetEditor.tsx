@@ -29,13 +29,12 @@ export const TilesetEditor: Component<Props> = ({
 };
 
 const Modes = {
-  Replace: "Replace",
-  Insert: "Insert",
+  Move: "Move",
   Swap: "Swap",
 };
 
 const Actions: Component = () => {
-  const [selectedMode, setSelectedMode] = createSignal(Modes.Replace);
+  const [selectedMode, setSelectedMode] = createSignal(Modes.Move);
 
   return (
     <div class={staticStyles.actions}>
