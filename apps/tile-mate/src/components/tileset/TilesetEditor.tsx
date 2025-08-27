@@ -1,5 +1,10 @@
-import { createSignal, type Component } from "solid-js";
+import { type Component } from "solid-js";
 import { TilesetContextProvider } from "./TilesetContext";
+import {
+  DropMode,
+  TilesetEditorContextProvider,
+  useTilesetEditorContext,
+} from "./TilesetEditorContext";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
@@ -17,35 +22,32 @@ export const TilesetEditor: Component<Props> = ({
   showGrid = false,
 }) => {
   return (
-    <TilesetContextProvider tileSize={tileSize} tilesetImage={tilesetImage}>
-      <div class={staticStyles.tilesetEditor}>
-        <Actions />
-        <div class={staticStyles.tilesets}>
-          <Tileset showGrid={showGrid} />
+    <TilesetEditorContextProvider>
+      <TilesetContextProvider tileSize={tileSize} tilesetImage={tilesetImage}>
+        <div class={staticStyles.tilesetEditor}>
+          <Actions />
+          <div class={staticStyles.tilesets}>
+            <Tileset showGrid={showGrid} />
+          </div>
         </div>
-      </div>
-    </TilesetContextProvider>
+      </TilesetContextProvider>
+    </TilesetEditorContextProvider>
   );
 };
 
-const Modes = {
-  Move: "Move",
-  Swap: "Swap",
-};
-
 const Actions: Component = () => {
-  const [selectedMode, setSelectedMode] = createSignal(Modes.Move);
+  const { mode, selectMode } = useTilesetEditorContext();
 
   return (
     <div class={staticStyles.actions}>
       <label>Mode</label>
       <ToggleGroup>
-        {Object.values(Modes).map((mode) => (
+        {Object.values(DropMode).map((value) => (
           <Toggle
-            label={mode}
-            value={mode}
-            isChecked={selectedMode() === mode}
-            onChange={(e) => setSelectedMode(e.currentTarget.value)}
+            label={value}
+            value={value}
+            isChecked={mode() === value}
+            onChange={(e) => selectMode(e.currentTarget.value)}
           />
         ))}
       </ToggleGroup>
