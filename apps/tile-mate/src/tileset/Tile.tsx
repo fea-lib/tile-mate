@@ -6,7 +6,7 @@ import { useTilesetStore, TileMateStore } from "../store";
 
 type Props = {
   tilesetIndex: TilesetIndex;
-  id: TileIndex;
+  index: TileIndex;
 };
 
 export const Tile: Component<Props> = (props) => {
@@ -23,7 +23,7 @@ export const Tile: Component<Props> = (props) => {
 
   const { onPointerDown, dragState } = useDragAndDrop({
     onPickUp: () => {
-      selectTile(props.id);
+      selectTile(props.index);
     },
     onDrop: (hoveringElement) => {
       if (hoveringElement) {
@@ -35,11 +35,11 @@ export const Tile: Component<Props> = (props) => {
           const mode = TileMateStore.selectedMode();
 
           // Don't do anything if source and target are the same
-          if (props.id !== targetId) {
+          if (props.index !== targetId) {
             if (mode === DropMode.Replace) {
-              replaceTile(targetId, props.id);
+              replaceTile(targetId, props.index);
             } else if (mode === DropMode.Swap) {
-              swapTiles(props.id, targetId);
+              swapTiles(props.index, targetId);
             }
           }
         }
@@ -48,7 +48,7 @@ export const Tile: Component<Props> = (props) => {
   });
 
   const isSelected = () => {
-    return selectedTile() === props.id;
+    return selectedTile() === props.index;
   };
 
   const isDragOrigin = () => {
@@ -57,7 +57,7 @@ export const Tile: Component<Props> = (props) => {
     return (
       drag.isDragging &&
       (drag.draggedElement as HTMLElement)?.dataset?.tileId ===
-        props.id.toString()
+        props.index.toString()
     );
   };
 
@@ -67,21 +67,22 @@ export const Tile: Component<Props> = (props) => {
       drag.hoveringElement?.closest("[data-tile-id]");
 
     return (
-      drag.isDragging && hoveringTile?.dataset?.tileId === props.id.toString()
+      drag.isDragging &&
+      hoveringTile?.dataset?.tileId === props.index.toString()
     );
   };
 
-  const tileData = tile(props.id);
+  const tileData = tile(props.index);
 
   if (!("imgX" in tileData) || !("imgY" in tileData)) {
     return (
       <span
-        data-tile-id={props.id}
+        data-tile-id={props.index}
         style={getDynamicStyles({ size: tileSize })}
         class={`${staticStyles.tile} ${
           isSelected() || isDragOrigin() ? staticStyles.selected : ""
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-        on:click={() => selectTile(props.id)}
+        on:click={() => selectTile(props.index)}
         on:pointerdown={onPointerDown}
       ></span>
     );
@@ -90,13 +91,13 @@ export const Tile: Component<Props> = (props) => {
   return (
     <img
       src={tilesetImage}
-      alt={`Tile ${props.id}`}
-      data-tile-id={props.id}
+      alt={`Tile ${props.index}`}
+      data-tile-id={props.index}
       style={getDynamicStyles({ ...tileData, size: tileSize })}
       class={`${staticStyles.tile} ${
         isSelected() || isDragOrigin() ? staticStyles.selected : ""
       } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-      on:click={() => selectTile(props.id)}
+      on:click={() => selectTile(props.index)}
       on:pointerdown={onPointerDown}
     />
   );

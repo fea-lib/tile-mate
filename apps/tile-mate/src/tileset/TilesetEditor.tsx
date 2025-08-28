@@ -1,4 +1,4 @@
-import { type Component, createEffect, createSignal, onMount } from "solid-js";
+import { type Component, createSignal, onMount, For } from "solid-js";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
@@ -17,14 +17,15 @@ export const TilesetEditor: Component<Props> = ({
   tileSize,
   showGrid = false,
 }) => {
-  const [tilesetIndex, setTilesetIndex] = createSignal<TilesetIndex | null>(
-    null
-  );
+  const [tilesetIndices, setTilesetIndices] = createSignal<TilesetIndex[]>([]);
 
   onMount(async () => {
     try {
-      const index = await TileMateStore.addTileset(tilesetImage, tileSize);
-      setTilesetIndex(index);
+      const index1 = await TileMateStore.addTileset(tilesetImage, tileSize);
+      const index2 = await TileMateStore.addTileset(tilesetImage, tileSize);
+      const index3 = await TileMateStore.addTileset(tilesetImage, tileSize);
+      const index4 = await TileMateStore.addTileset(tilesetImage, tileSize);
+      setTilesetIndices([index1, index2, index3, index4]);
     } catch (error) {
       console.error("Failed to load tileset:", error);
     }
@@ -34,9 +35,11 @@ export const TilesetEditor: Component<Props> = ({
     <div class={staticStyles.tilesetEditor}>
       <Actions />
       <div class={staticStyles.tilesets}>
-        {tilesetIndex() !== null && (
-          <Tileset tilesetIndex={tilesetIndex()!} showGrid={showGrid} />
-        )}
+        <For each={tilesetIndices()}>
+          {(tilesetIndex) => (
+            <Tileset tilesetIndex={tilesetIndex} showGrid={showGrid} />
+          )}
+        </For>
       </div>
     </div>
   );

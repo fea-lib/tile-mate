@@ -1,6 +1,6 @@
-import type { Component } from "solid-js";
+import { For, type Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTilesetStore } from "../store";
+import { useTilesetStore, TileMateStore } from "../store";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
 
@@ -19,18 +19,29 @@ export const Tileset: Component<Props> = ({
   const grid = toGridOptions(showGrid);
 
   return (
-    <div
-      class={staticStyles.tileset}
-      style={getDynamicStyle({
-        grid,
-        tileSize,
-        columns: columns(),
-        rows: rows(),
-      })}
-    >
-      {tiles().map(({ index: id }) => (
-        <Tile tilesetIndex={tilesetIndex} id={id} />
-      ))}
+    <div class={staticStyles.tilesetFrame}>
+      <div class={staticStyles.tilesetHeader}>
+        <span class={staticStyles.tilesetTitle}>Tileset {tilesetIndex}</span>
+        <div class={staticStyles.tilesetInfo}>
+          {TileMateStore.columns(tilesetIndex)} ×{" "}
+          {TileMateStore.rows(tilesetIndex)} tiles
+        </div>
+      </div>
+      <div class={staticStyles.tilesetContent}>
+        <div
+          class={staticStyles.tileset}
+          style={getDynamicStyle({
+            grid,
+            tileSize,
+            columns: columns(),
+            rows: rows(),
+          })}
+        >
+          <For each={tiles()}>
+            {({ index }) => <Tile tilesetIndex={tilesetIndex} index={index} />}
+          </For>
+        </div>
+      </div>
     </div>
   );
 };
