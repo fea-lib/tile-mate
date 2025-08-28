@@ -7,8 +7,8 @@ import {
 } from "./TilesetEditorContext";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
-import { Toggle } from "../common/toggle/Toggle";
-import { ToggleGroup } from "../common/toggle/ToggleGroup";
+import { Toggle } from "../toggle/Toggle";
+import { ToggleGroup } from "../toggle/ToggleGroup";
 
 type Props = {
   tilesetImage: string;

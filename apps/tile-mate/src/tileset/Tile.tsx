@@ -1,7 +1,7 @@
 import type { Component } from "solid-js";
 import { TileId, useTilesetContext } from "./TilesetContext";
 import { useTilesetEditorContext, DropMode } from "./TilesetEditorContext";
-import { useDragAndDrop } from "../common/drag/useDrag";
+import { useDragAndDrop } from "../drag/useDrag";
 import staticStyles from "./Tile.module.css";
 
 type Props = {
