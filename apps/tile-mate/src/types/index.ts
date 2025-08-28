@@ -22,4 +22,11 @@ export type TilesetIndex = number;
 export type Tileset = {
   index: TilesetIndex;
   tiles: Tile[];
+  tileSize: number;
+  columns: number;
+  rows: number;
+  image: {
+    url: string;
+    isLoading: boolean;
+  };
 };
