@@ -192,6 +192,7 @@ export const replaceTile = (
     };
 
     setStore("tilesets", tilesetIndex, "tileset", "tiles", currentTiles);
+    setStore("tilesets", tilesetIndex, "selectedTile", targetId);
   }
 };
 
@@ -219,6 +220,7 @@ export const swapTiles = (
     };
 
     setStore("tilesets", tilesetIndex, "tileset", "tiles", currentTiles);
+    setStore("tilesets", tilesetIndex, "selectedTile", tileId2);
   }
 };
 
@@ -234,7 +236,7 @@ export const TileMateStore = {
   selectedMode,
 
   // Tileset properties
-  isLoading: isImageLoading,
+  isImageLoading,
   columns,
   rows,
   tilesetImage,

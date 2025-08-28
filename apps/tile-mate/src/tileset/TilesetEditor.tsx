@@ -1,14 +1,10 @@
-import { type Component } from "solid-js";
-import { TilesetContextProvider } from "./TilesetContext";
-import {
-  TilesetEditorContextProvider,
-  useTilesetEditorContext,
-} from "./TilesetEditorContext";
+import { type Component, createEffect, createSignal, onMount } from "solid-js";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
 import { ToggleGroup } from "../toggle/ToggleGroup";
-import { DropMode } from "../types";
+import { DropMode, TilesetIndex } from "../types";
+import { TileMateStore } from "../store";
 
 type Props = {
   tilesetImage: string;
@@ -21,23 +17,32 @@ export const TilesetEditor: Component<Props> = ({
   tileSize,
   showGrid = false,
 }) => {
+  const [tilesetIndex, setTilesetIndex] = createSignal<TilesetIndex | null>(
+    null
+  );
+
+  onMount(async () => {
+    try {
+      const index = await TileMateStore.addTileset(tilesetImage, tileSize);
+      setTilesetIndex(index);
+    } catch (error) {
+      console.error("Failed to load tileset:", error);
+    }
+  });
+
   return (
-    <TilesetEditorContextProvider>
-      <TilesetContextProvider tileSize={tileSize} tilesetImage={tilesetImage}>
-        <div class={staticStyles.tilesetEditor}>
-          <Actions />
-          <div class={staticStyles.tilesets}>
-            <Tileset showGrid={showGrid} />
-          </div>
-        </div>
-      </TilesetContextProvider>
-    </TilesetEditorContextProvider>
+    <div class={staticStyles.tilesetEditor}>
+      <Actions />
+      <div class={staticStyles.tilesets}>
+        {tilesetIndex() !== null && (
+          <Tileset tilesetIndex={tilesetIndex()!} showGrid={showGrid} />
+        )}
+      </div>
+    </div>
   );
 };
 
 const Actions: Component = () => {
-  const { mode, selectMode } = useTilesetEditorContext();
-
   return (
     <div class={staticStyles.actions}>
       <label>Mode</label>
@@ -46,8 +51,10 @@ const Actions: Component = () => {
           <Toggle
             label={value}
             value={value}
-            isChecked={mode() === value}
-            onChange={(e) => selectMode(e.currentTarget.value)}
+            isChecked={TileMateStore.selectedMode() === value}
+            onChange={(e) =>
+              TileMateStore.selectMode(e.currentTarget.value as DropMode)
+            }
           />
         ))}
       </ToggleGroup>

@@ -1,14 +1,20 @@
 import type { Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTilesetContext } from "./TilesetContext";
+import { useTilesetStore } from "../store";
 import staticStyles from "./Tileset.module.css";
+import { TilesetIndex } from "../types";
 
 type Props = {
+  tilesetIndex: TilesetIndex;
   showGrid?: boolean | { color?: string; gap?: number };
 };
 
-export const Tileset: Component<Props> = ({ showGrid = false }) => {
-  const { tileSize, columns, rows, tiles } = useTilesetContext();
+export const Tileset: Component<Props> = ({
+  tilesetIndex,
+  showGrid = false,
+}) => {
+  const tileset = useTilesetStore(tilesetIndex);
+  const { tileSize, columns, rows, tiles } = tileset;
 
   const grid = toGridOptions(showGrid);
 
@@ -23,7 +29,7 @@ export const Tileset: Component<Props> = ({ showGrid = false }) => {
       })}
     >
       {tiles().map(({ index: id }) => (
-        <Tile id={id} />
+        <Tile tilesetIndex={tilesetIndex} id={id} />
       ))}
     </div>
   );

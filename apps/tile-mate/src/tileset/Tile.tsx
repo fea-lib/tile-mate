@@ -1,29 +1,29 @@
 import type { Component } from "solid-js";
-import { useTilesetContext } from "./TilesetContext";
-import { useTilesetEditorContext } from "./TilesetEditorContext";
 import { useDragAndDrop } from "../drag/useDrag";
 import staticStyles from "./Tile.module.css";
-import { DropMode, TileIndex } from "../types";
+import { DropMode, TileIndex, TilesetIndex } from "../types";
+import { useTilesetStore, TileMateStore } from "../store";
 
 type Props = {
+  tilesetIndex: TilesetIndex;
   id: TileIndex;
 };
 
 export const Tile: Component<Props> = (props) => {
+  const tileset = useTilesetStore(props.tilesetIndex);
   const {
     tilesetImage,
     tileSize,
     selectedTile,
-    setSelectedTile,
+    selectTile,
     tile,
     replaceTile,
     swapTiles,
-  } = useTilesetContext();
-  const editorContext = useTilesetEditorContext();
+  } = tileset;
 
   const { onPointerDown, dragState } = useDragAndDrop({
     onPickUp: () => {
-      setSelectedTile(props.id);
+      selectTile(props.id);
     },
     onDrop: (hoveringElement) => {
       if (hoveringElement) {
@@ -32,7 +32,7 @@ export const Tile: Component<Props> = (props) => {
 
         if (tileElement) {
           const targetId = parseInt(tileElement.dataset.tileId || "0");
-          const mode = editorContext.mode();
+          const mode = TileMateStore.selectedMode();
 
           // Don't do anything if source and target are the same
           if (props.id !== targetId) {
@@ -81,7 +81,7 @@ export const Tile: Component<Props> = (props) => {
         class={`${staticStyles.tile} ${
           isSelected() || isDragOrigin() ? staticStyles.selected : ""
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-        on:click={() => setSelectedTile(props.id)}
+        on:click={() => selectTile(props.id)}
         on:pointerdown={onPointerDown}
       ></span>
     );
@@ -96,7 +96,7 @@ export const Tile: Component<Props> = (props) => {
       class={`${staticStyles.tile} ${
         isSelected() || isDragOrigin() ? staticStyles.selected : ""
       } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-      on:click={() => setSelectedTile(props.id)}
+      on:click={() => selectTile(props.id)}
       on:pointerdown={onPointerDown}
     />
   );

@@ -14,8 +14,8 @@ export const useTilesetStore = (tilesetIndex: TilesetIndex) => {
     get tileSize() {
       return TileMateStore.tileSize(tilesetIndex);
     },
-    get isLoading() {
-      return TileMateStore.isLoading(tilesetIndex);
+    get isImageLoading() {
+      return TileMateStore.isImageLoading(tilesetIndex);
     },
 
     // Getters as functions (to match TilesetContext interface)
@@ -28,7 +28,7 @@ export const useTilesetStore = (tilesetIndex: TilesetIndex) => {
     // Setters
     setColumns: (cols: number) => TileMateStore.setColumns(tilesetIndex, cols),
     setRows: (rows: number) => TileMateStore.setRows(tilesetIndex, rows),
-    setSelectedTile: (id: TileIndex | null) =>
+    selectTile: (id: TileIndex | null) =>
       TileMateStore.selectTile(tilesetIndex, id ?? undefined),
 
     // Operations
