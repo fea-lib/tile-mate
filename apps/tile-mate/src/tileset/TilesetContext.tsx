@@ -6,33 +6,21 @@ import {
   Component,
   createEffect,
 } from "solid-js";
-
-export type TileId = number;
-
-export type Tile =
-  | {
-      id: TileId;
-      imgX: number;
-      imgY: number;
-    }
-  | {
-      // Empty Tile
-      id: TileId;
-    };
+import { Tile, TileIndex } from "../types";
 
 type TilesetState = {
   tilesetImage: string;
   tileSize: number;
   tiles: () => Tile[];
-  tile: (id: TileId) => Tile | undefined;
+  tile: (id: TileIndex) => Tile | undefined;
   columns: () => number;
   setColumns: (cols: number) => void;
   rows: () => number;
   setRows: (rows: number) => void;
-  selectedTile: () => TileId | null;
-  setSelectedTile: (id: TileId | null) => void;
-  replaceTile: (targetId: TileId, sourceId: TileId) => void;
-  swapTiles: (tileId1: TileId, tileId2: TileId) => void;
+  selectedTile: () => TileIndex | null;
+  setSelectedTile: (id: TileIndex | null) => void;
+  replaceTile: (targetId: TileIndex, sourceId: TileIndex) => void;
+  swapTiles: (tileId1: TileIndex, tileId2: TileIndex) => void;
 };
 
 const TilesetContext = createContext<TilesetState>();
@@ -48,7 +36,7 @@ export const TilesetContextProvider: Component<Props> = (props) => {
   const [columns, setColumns] = createSignal<number>(0);
   const [rows, setRows] = createSignal<number>(0);
   const [tiles, setTiles] = createSignal<Tile[]>([]);
-  const [selectedTile, setSelectedTile] = createSignal<TileId | null>(null);
+  const [selectedTile, setSelectedTile] = createSignal<TileIndex | null>(null);
 
   createEffect(() => {
     setIsLoading(true);
@@ -65,7 +53,7 @@ export const TilesetContextProvider: Component<Props> = (props) => {
       const newTiles: Tile[] = [];
       for (let y = 0; y < calculatedRows; y++) {
         for (let x = 0; x < calculatedColumns; x++) {
-          newTiles.push({ id: newTiles.length, imgX: x, imgY: y });
+          newTiles.push({ index: newTiles.length, imgX: x, imgY: y });
         }
       }
       setTiles(newTiles);
@@ -81,29 +69,29 @@ export const TilesetContextProvider: Component<Props> = (props) => {
     img.src = props.tilesetImage;
   });
 
-  const tile = (id: TileId) => tiles()[id];
+  const tile = (id: TileIndex) => tiles()[id];
 
-  const replaceTile = (targetId: TileId, sourceId: TileId) => {
+  const replaceTile = (targetId: TileIndex, sourceId: TileIndex) => {
     const currentTiles = [...tiles()];
     const sourceTile = currentTiles[sourceId];
     if (sourceTile) {
       // Replace target with source tile's image position
       currentTiles[targetId] = {
         ...sourceTile,
-        id: currentTiles[targetId].id,
+        index: currentTiles[targetId].index,
       };
 
       // Reset source to its original position (identity)
       const sourceX = sourceId % columns();
       const sourceY = Math.floor(sourceId / columns());
       currentTiles[sourceId] = {
-        id: currentTiles[sourceId].id,
+        index: currentTiles[sourceId].index,
       };
       setTiles(currentTiles);
     }
   };
 
-  const swapTiles = (tileId1: TileId, tileId2: TileId) => {
+  const swapTiles = (tileId1: TileIndex, tileId2: TileIndex) => {
     const currentTiles = [...tiles()];
     const tile1 = { ...currentTiles[tileId1] };
     const tile2 = { ...currentTiles[tileId2] };
@@ -112,12 +100,12 @@ export const TilesetContextProvider: Component<Props> = (props) => {
       // Swap the tiles
       currentTiles[tileId1] = {
         ...tile2,
-        id: tileId1,
+        index: tileId1,
       };
 
       currentTiles[tileId2] = {
         ...tile1,
-        id: tileId2,
+        index: tileId2,
       };
 
       setTiles(currentTiles);

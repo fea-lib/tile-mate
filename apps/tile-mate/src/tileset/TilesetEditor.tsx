@@ -1,7 +1,6 @@
 import { type Component } from "solid-js";
 import { TilesetContextProvider } from "./TilesetContext";
 import {
-  DropMode,
   TilesetEditorContextProvider,
   useTilesetEditorContext,
 } from "./TilesetEditorContext";
@@ -9,6 +8,7 @@ import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
 import { ToggleGroup } from "../toggle/ToggleGroup";
+import { DropMode } from "../types";
 
 type Props = {
   tilesetImage: string;

@@ -5,12 +5,7 @@ import {
   JSX,
   Component,
 } from "solid-js";
-
-export const DropMode = {
-  Replace: "Replace",
-  Swap: "Swap",
-};
-export type DropMode = (typeof DropMode)[keyof typeof DropMode];
+import { DropMode } from "../types";
 
 type TilesetEditorState = {
   mode: () => DropMode;

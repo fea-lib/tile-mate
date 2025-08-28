@@ -22,7 +22,7 @@ export const Tileset: Component<Props> = ({ showGrid = false }) => {
         rows: rows(),
       })}
     >
-      {tiles().map(({ id }) => (
+      {tiles().map(({ index: id }) => (
         <Tile id={id} />
       ))}
     </div>
