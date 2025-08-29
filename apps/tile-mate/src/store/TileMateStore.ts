@@ -226,6 +226,80 @@ export const swapTiles = (
   }
 };
 
+// Cross-tileset operations
+export const replaceTileCross = (
+  sourceTilesetIndex: TilesetIndex,
+  sourceId: TileIndex,
+  targetTilesetIndex: TilesetIndex,
+  targetId: TileIndex
+) => {
+  if (
+    !store.tilesets[sourceTilesetIndex] ||
+    !store.tilesets[targetTilesetIndex]
+  )
+    return;
+
+  const sourceTiles = [...store.tilesets[sourceTilesetIndex].tileset.tiles];
+  const targetTiles = [...store.tilesets[targetTilesetIndex].tileset.tiles];
+  const sourceTile = sourceTiles[sourceId];
+
+  if (sourceTile) {
+    // Replace target with source tile's image position
+    targetTiles[targetId] = {
+      ...sourceTile,
+      index: targetTiles[targetId].index,
+    };
+
+    // Reset source to its original position (identity) only if it's in a different tileset
+    if (sourceTilesetIndex !== targetTilesetIndex) {
+      sourceTiles[sourceId] = {
+        index: sourceTiles[sourceId].index,
+      };
+      setStore("tilesets", sourceTilesetIndex, "tileset", "tiles", sourceTiles);
+    }
+
+    setStore("tilesets", targetTilesetIndex, "tileset", "tiles", targetTiles);
+    setStore("tilesets", targetTilesetIndex, "selectedTile", targetId);
+  }
+};
+
+export const swapTilesCross = (
+  sourceTilesetIndex: TilesetIndex,
+  sourceId: TileIndex,
+  targetTilesetIndex: TilesetIndex,
+  targetId: TileIndex
+) => {
+  if (
+    !store.tilesets[sourceTilesetIndex] ||
+    !store.tilesets[targetTilesetIndex]
+  )
+    return;
+
+  const sourceTiles = [...store.tilesets[sourceTilesetIndex].tileset.tiles];
+  const targetTiles = [...store.tilesets[targetTilesetIndex].tileset.tiles];
+  const sourceTile = { ...sourceTiles[sourceId] };
+  const targetTile = { ...targetTiles[targetId] };
+
+  if (sourceTilesetIndex === targetTilesetIndex) {
+    // Same tileset - use existing swap logic
+    swapTiles(sourceTilesetIndex, sourceId, targetId);
+  } else {
+    // Different tilesets - exchange tile data
+    sourceTiles[sourceId] = {
+      ...targetTile,
+      index: sourceId,
+    };
+    targetTiles[targetId] = {
+      ...sourceTile,
+      index: targetId,
+    };
+
+    setStore("tilesets", sourceTilesetIndex, "tileset", "tiles", sourceTiles);
+    setStore("tilesets", targetTilesetIndex, "tileset", "tiles", targetTiles);
+    setStore("tilesets", targetTilesetIndex, "selectedTile", targetId);
+  }
+};
+
 export const TileMateStore = {
   get state() {
     return store;
@@ -254,6 +328,68 @@ export const TileMateStore = {
   setRows,
   replaceTile,
   swapTiles,
+  replaceTileCross,
+  swapTilesCross,
+};
+
+export const useTileMateStore = () => {
+  return {
+    // Properties
+    tilesets: () => TileMateStore.tilesets(),
+    tiles: (tileset: TilesetIndex) => TileMateStore.tiles(tileset),
+    tile: (tileset: TilesetIndex, tile: TileIndex) =>
+      TileMateStore.tile(tileset, tile),
+    columns: (tileset: TilesetIndex) => TileMateStore.columns(tileset),
+    rows: (tileset: TilesetIndex) => TileMateStore.rows(tileset),
+    selectedTile: (tileset: TilesetIndex) =>
+      TileMateStore.selectedTile(tileset) ?? null,
+
+    // Setters
+    setColumns: (tileset: TilesetIndex, cols: number) =>
+      TileMateStore.setColumns(tileset, cols),
+    setRows: (tileset: TilesetIndex, rows: number) =>
+      TileMateStore.setRows(tileset, rows),
+    selectTile: (tileset: TilesetIndex, id: TileIndex | null) =>
+      TileMateStore.selectTile(tileset, id ?? undefined),
+
+    // Operations
+    replaceTile: (
+      tileset: TilesetIndex,
+      targetId: TileIndex,
+      sourceId: TileIndex
+    ) => TileMateStore.replaceTile(tileset, targetId, sourceId),
+    swapTiles: (
+      tileset: TilesetIndex,
+      tileId1: TileIndex,
+      tileId2: TileIndex
+    ) => TileMateStore.swapTiles(tileset, tileId1, tileId2),
+
+    // Cross-tileset operations
+    replaceTileCross: (
+      sourceTilesetIndex: TilesetIndex,
+      sourceId: TileIndex,
+      targetTilesetIndex: TilesetIndex,
+      targetId: TileIndex
+    ) =>
+      TileMateStore.replaceTileCross(
+        sourceTilesetIndex,
+        sourceId,
+        targetTilesetIndex,
+        targetId
+      ),
+    swapTilesCross: (
+      sourceTilesetIndex: TilesetIndex,
+      sourceId: TileIndex,
+      targetTilesetIndex: TilesetIndex,
+      targetId: TileIndex
+    ) =>
+      TileMateStore.swapTilesCross(
+        sourceTilesetIndex,
+        sourceId,
+        targetTilesetIndex,
+        targetId
+      ),
+  };
 };
 
 export default TileMateStore;

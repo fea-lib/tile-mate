@@ -1,6 +1,6 @@
 import { For, type Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTileMateStore, TileMateStore } from "../store";
+import { useTileMateStore, TileMateStore } from "../store/TileMateStore";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
 

@@ -2,7 +2,7 @@ import type { Component } from "solid-js";
 import { useDragAndDrop } from "../drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
-import { useTileMateStore, TileMateStore } from "../store";
+import { useTileMateStore, TileMateStore } from "../store/TileMateStore";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -33,14 +33,42 @@ export const Tile: Component<Props> = (props) => {
 
         if (tileElement) {
           const targetId = parseInt(tileElement.dataset.tileId || "0");
+          const targetTilesetIndex = parseInt(
+            tileElement.dataset.tilesetId || "0"
+          );
           const mode = TileMateStore.selectedMode();
 
-          // Don't do anything if source and target are the same
-          if (props.index !== targetId) {
+          // Don't do anything if source and target are the same tile in the same tileset
+          if (
+            props.index !== targetId ||
+            props.tilesetIndex !== targetTilesetIndex
+          ) {
             if (mode === DropMode.Replace) {
-              replaceTile(targetId, props.index);
+              if (props.tilesetIndex === targetTilesetIndex) {
+                // Same tileset - use existing function
+                replaceTile(targetId, props.index);
+              } else {
+                // Cross-tileset replace
+                store.replaceTileCross(
+                  props.tilesetIndex,
+                  props.index,
+                  targetTilesetIndex,
+                  targetId
+                );
+              }
             } else if (mode === DropMode.Swap) {
-              swapTiles(props.index, targetId);
+              if (props.tilesetIndex === targetTilesetIndex) {
+                // Same tileset - use existing function
+                swapTiles(props.index, targetId);
+              } else {
+                // Cross-tileset swap
+                store.swapTilesCross(
+                  props.tilesetIndex,
+                  props.index,
+                  targetTilesetIndex,
+                  targetId
+                );
+              }
             }
           }
         }
@@ -55,21 +83,30 @@ export const Tile: Component<Props> = (props) => {
   const isDragOrigin = () => {
     const drag = dragState();
 
+    if (!drag.isDragging) return false;
+
+    const dragElement = drag.draggedElement as HTMLElement;
+    const data = dragElement?.dataset;
+
     return (
-      drag.isDragging &&
-      (drag.draggedElement as HTMLElement)?.dataset?.tileId ===
-        props.index.toString()
+      data.tileSetId === props.tilesetIndex.toString() &&
+      data.tileId === props.index.toString()
     );
   };
 
   const isDragTarget = () => {
     const drag = dragState();
+
+    if (!drag.isDragging) return false;
+
     const hoveringTile: HTMLElement | undefined =
       drag.hoveringElement?.closest("[data-tile-id]");
 
+    const data = hoveringTile?.dataset;
+
     return (
-      drag.isDragging &&
-      hoveringTile?.dataset?.tileId === props.index.toString()
+      data.tileSetId === props.tilesetIndex.toString() &&
+      data.tileId === props.index.toString()
     );
   };
 
@@ -79,6 +116,7 @@ export const Tile: Component<Props> = (props) => {
     return (
       <span
         data-tile-id={props.index}
+        data-tileset-id={props.tilesetIndex}
         style={getDynamicStyles({ size: tileSize() })}
         class={`${staticStyles.tile} ${
           isSelected() || isDragOrigin() ? staticStyles.selected : ""
@@ -94,6 +132,7 @@ export const Tile: Component<Props> = (props) => {
       src={tilesetImage()}
       alt={`Tile ${props.index}`}
       data-tile-id={props.index}
+      data-tileset-id={props.tilesetIndex}
       style={getDynamicStyles({ ...tileData, size: tileSize() })}
       class={`${staticStyles.tile} ${
         isSelected() || isDragOrigin() ? staticStyles.selected : ""

@@ -4,8 +4,7 @@ import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
 import { ToggleGroup } from "../toggle/ToggleGroup";
 import { DropMode } from "../types";
-import { TileMateStore } from "../store";
-import { useTileMateStore } from "../store/useTileMateStore";
+import { TileMateStore, useTileMateStore } from "../store/TileMateStore";
 
 type Props = {
   tilesetImage: string;
