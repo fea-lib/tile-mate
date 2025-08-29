@@ -40,7 +40,7 @@ export const TilesetEditor: Component<Props> = ({
       <div class={staticStyles.tilesets}>
         <For each={tilesets()}>
           {(tileset) => (
-            <Tileset tilesetIndex={tileset.tileset.index} showGrid={showGrid} />
+            <Tileset tilesetIndex={tileset.index} showGrid={showGrid} />
           )}
         </For>
       </div>

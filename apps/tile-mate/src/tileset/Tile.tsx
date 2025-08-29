@@ -13,9 +13,9 @@ export const Tile: Component<Props> = (props) => {
   const store = useTileMateStore();
   const tilesetImage = () => TileMateStore.tilesetImage(props.tilesetIndex);
   const tileSize = () => TileMateStore.tileSize(props.tilesetIndex);
-  const selectedTile = () => store.selectedTile(props.tilesetIndex);
+  const selectedTile = () => store.selectedTile();
   const selectTile = (id: TileIndex | null) =>
-    store.selectTile(props.tilesetIndex, id);
+    store.selectTile([props.tilesetIndex, id]);
   const tile = () => store.tile(props.tilesetIndex, props.index);
   const replaceTile = (targetId: TileIndex, sourceId: TileIndex) =>
     store.replaceTile(props.tilesetIndex, targetId, sourceId);
@@ -77,7 +77,12 @@ export const Tile: Component<Props> = (props) => {
   });
 
   const isSelected = () => {
-    return selectedTile() === props.index;
+    const selected = selectedTile();
+    return (
+      selected &&
+      selected[0] === props.tilesetIndex &&
+      selected[1] === props.index
+    );
   };
 
   const isDragOrigin = () => {
@@ -85,11 +90,12 @@ export const Tile: Component<Props> = (props) => {
 
     if (!drag.isDragging) return false;
 
-    const dragElement = drag.draggedElement as HTMLElement;
+    const dragElement = drag.draggedElement as HTMLElement | undefined;
     const data = dragElement?.dataset;
 
     return (
-      data.tileSetId === props.tilesetIndex.toString() &&
+      data &&
+      data.tilesetId === props.tilesetIndex.toString() &&
       data.tileId === props.index.toString()
     );
   };
@@ -105,7 +111,8 @@ export const Tile: Component<Props> = (props) => {
     const data = hoveringTile?.dataset;
 
     return (
-      data.tileSetId === props.tilesetIndex.toString() &&
+      data &&
+      data.tilesetId === props.tilesetIndex.toString() &&
       data.tileId === props.index.toString()
     );
   };
