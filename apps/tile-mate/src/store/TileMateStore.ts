@@ -1,6 +1,22 @@
 import { createStore } from "solid-js/store";
 import { DropMode, TileIndex, TilesetIndex, Tileset, Tile } from "../types";
 
+// Debounce utility
+const debounceMap = new Map<string, number>();
+
+const debounce = (key: string, fn: () => void, delay: number = 300) => {
+  if (debounceMap.has(key)) {
+    clearTimeout(debounceMap.get(key)!);
+  }
+
+  const timeoutId = setTimeout(() => {
+    fn();
+    debounceMap.delete(key);
+  }, delay);
+
+  debounceMap.set(key, timeoutId);
+};
+
 type SelectedTile = [TilesetIndex, TileIndex];
 
 export type TileMateStoreState = {
@@ -147,54 +163,61 @@ export const tiles = (tilesetIndex: TilesetIndex): Tile[] => {
 };
 
 export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
-  if (store.tilesets[tilesetIndex]) {
-    setStore("tilesets", tilesetIndex, "columns", newColumns);
-    setStore(
-      "tilesets",
-      tilesetIndex,
-      "tiles",
-      getBlankTiles(rows(tilesetIndex), newColumns)
-    );
-  }
+  debounce(`columns-${tilesetIndex}`, () => {
+    if (store.tilesets[tilesetIndex]) {
+      setStore("tilesets", tilesetIndex, "columns", newColumns);
+      setStore(
+        "tilesets",
+        tilesetIndex,
+        "tiles",
+        getBlankTiles(rows(tilesetIndex), newColumns)
+      );
+    }
+  });
 };
 
 export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
-  if (store.tilesets[tilesetIndex]) {
-    setStore("tilesets", tilesetIndex, "rows", newRows);
-    setStore(
-      "tilesets",
-      tilesetIndex,
-      "tiles",
-      getBlankTiles(newRows, columns(tilesetIndex))
-    );
-  }
+  debounce(`rows-${tilesetIndex}`, () => {
+    if (store.tilesets[tilesetIndex]) {
+      setStore("tilesets", tilesetIndex, "rows", newRows);
+      setStore(
+        "tilesets",
+        tilesetIndex,
+        "tiles",
+        getBlankTiles(newRows, columns(tilesetIndex))
+      );
+    }
+  });
 };
 
 export const setTileSize = (
   tilesetIndex: TilesetIndex,
   newTileSize: number
 ) => {
-  if (store.tilesets[tilesetIndex]) {
-    const tilesetWidth =
-      store.tilesets[tilesetIndex].columns *
-      store.tilesets[tilesetIndex].tileSize;
+  debounce(`tileSize-${tilesetIndex}`, () => {
+    if (store.tilesets[tilesetIndex]) {
+      const tilesetWidth =
+        store.tilesets[tilesetIndex].columns *
+        store.tilesets[tilesetIndex].tileSize;
 
-    const tilesetHeight =
-      store.tilesets[tilesetIndex].rows * store.tilesets[tilesetIndex].tileSize;
+      const tilesetHeight =
+        store.tilesets[tilesetIndex].rows *
+        store.tilesets[tilesetIndex].tileSize;
 
-    const newColumns = Math.floor(tilesetWidth / newTileSize);
-    const newRows = Math.floor(tilesetHeight / newTileSize);
+      const newColumns = Math.floor(tilesetWidth / newTileSize);
+      const newRows = Math.floor(tilesetHeight / newTileSize);
 
-    setStore("tilesets", tilesetIndex, "tileSize", newTileSize);
-    setStore("tilesets", tilesetIndex, "columns", newColumns);
-    setStore("tilesets", tilesetIndex, "rows", newRows);
-    setStore(
-      "tilesets",
-      tilesetIndex,
-      "tiles",
-      getBlankTiles(newRows, newColumns)
-    );
-  }
+      setStore("tilesets", tilesetIndex, "tileSize", newTileSize);
+      setStore("tilesets", tilesetIndex, "columns", newColumns);
+      setStore("tilesets", tilesetIndex, "rows", newRows);
+      setStore(
+        "tilesets",
+        tilesetIndex,
+        "tiles",
+        getBlankTiles(newRows, newColumns)
+      );
+    }
+  });
 };
 
 export const replaceTile = (
