@@ -24,12 +24,7 @@ export const TilesetEditor: Component<Props> = ({
     if (tilesets().length > 0) return;
 
     try {
-      await Promise.all([
-        TileMateStore.addTileset(tilesetImage, tileSize),
-        TileMateStore.addTileset(tilesetImage, tileSize),
-        TileMateStore.addTileset(tilesetImage, tileSize),
-        TileMateStore.addTileset(tilesetImage, tileSize),
-      ]);
+      await Promise.all([TileMateStore.addTileset(tilesetImage, tileSize)]);
     } catch (error) {
       console.error("Failed to load tileset:", error);
     }
@@ -53,20 +48,21 @@ const Actions: Component = () => {
   return (
     <div class={staticStyles.actions}>
       <div class={staticStyles.actionGroup}>
-        <Button label="New Tileset" />
+        <Button>New Tileset</Button>
       </div>
       <div class={staticStyles.actionGroup}>
         <label>Mode</label>
         <ToggleGroup>
           {Object.values(DropMode).map((value) => (
             <Toggle
-              label={value}
               value={value}
               isChecked={TileMateStore.selectedMode() === value}
-              onChange={(e) =>
-                TileMateStore.selectMode(e.currentTarget.value as DropMode)
-              }
-            />
+              onChange={(e) => {
+                TileMateStore.selectMode(e.currentTarget.value as DropMode);
+              }}
+            >
+              {value}
+            </Toggle>
           ))}
         </ToggleGroup>
       </div>

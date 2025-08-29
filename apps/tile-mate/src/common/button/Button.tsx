@@ -1,14 +1,14 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, ParentProps } from "solid-js";
 import staticStyles from "./Button.module.css";
 
-type Props = {
-  label: JSX.Element;
-};
+type Props = ParentProps<{
+  onClick?: JSX.ButtonHTMLAttributes<HTMLButtonElement>["onClick"];
+}>;
 
 export const Button: Component<Props> = (props) => {
   return (
-    <label class={staticStyles.button}>
-      <span>{props.label}</span>
-    </label>
+    <button type="button" class={staticStyles.button} onClick={props.onClick}>
+      <span>{props.children}</span>
+    </button>
   );
 };
