@@ -1,6 +1,6 @@
 import { For, type Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTilesetStore, TileMateStore } from "../store";
+import { useTileMateStore, TileMateStore } from "../store";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
 
@@ -13,8 +13,11 @@ export const Tileset: Component<Props> = ({
   tilesetIndex,
   showGrid = false,
 }) => {
-  const tileset = useTilesetStore(tilesetIndex);
-  const { tileSize, columns, rows, tiles } = tileset;
+  const store = useTileMateStore();
+  const tileSize = () => TileMateStore.tileSize(tilesetIndex);
+  const columns = () => store.columns(tilesetIndex);
+  const rows = () => store.rows(tilesetIndex);
+  const tiles = () => store.tiles(tilesetIndex);
 
   const grid = toGridOptions(showGrid);
 
@@ -32,7 +35,7 @@ export const Tileset: Component<Props> = ({
           class={staticStyles.tileset}
           style={getDynamicStyle({
             grid,
-            tileSize,
+            tileSize: tileSize(),
             columns: columns(),
             rows: rows(),
           })}

@@ -2,7 +2,7 @@ import type { Component } from "solid-js";
 import { useDragAndDrop } from "../drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
-import { useTilesetStore, TileMateStore } from "../store";
+import { useTileMateStore, TileMateStore } from "../store";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -10,16 +10,17 @@ type Props = {
 };
 
 export const Tile: Component<Props> = (props) => {
-  const tileset = useTilesetStore(props.tilesetIndex);
-  const {
-    tilesetImage,
-    tileSize,
-    selectedTile,
-    selectTile,
-    tile,
-    replaceTile,
-    swapTiles,
-  } = tileset;
+  const store = useTileMateStore();
+  const tilesetImage = () => TileMateStore.tilesetImage(props.tilesetIndex);
+  const tileSize = () => TileMateStore.tileSize(props.tilesetIndex);
+  const selectedTile = () => store.selectedTile(props.tilesetIndex);
+  const selectTile = (id: TileIndex | null) =>
+    store.selectTile(props.tilesetIndex, id);
+  const tile = () => store.tile(props.tilesetIndex, props.index);
+  const replaceTile = (targetId: TileIndex, sourceId: TileIndex) =>
+    store.replaceTile(props.tilesetIndex, targetId, sourceId);
+  const swapTiles = (tileId1: TileIndex, tileId2: TileIndex) =>
+    store.swapTiles(props.tilesetIndex, tileId1, tileId2);
 
   const { onPointerDown, dragState } = useDragAndDrop({
     onPickUp: () => {
@@ -72,13 +73,13 @@ export const Tile: Component<Props> = (props) => {
     );
   };
 
-  const tileData = tile(props.index);
+  const tileData = tile();
 
-  if (!("imgX" in tileData) || !("imgY" in tileData)) {
+  if (!tileData || !("imgX" in tileData) || !("imgY" in tileData)) {
     return (
       <span
         data-tile-id={props.index}
-        style={getDynamicStyles({ size: tileSize })}
+        style={getDynamicStyles({ size: tileSize() })}
         class={`${staticStyles.tile} ${
           isSelected() || isDragOrigin() ? staticStyles.selected : ""
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
@@ -90,10 +91,10 @@ export const Tile: Component<Props> = (props) => {
 
   return (
     <img
-      src={tilesetImage}
+      src={tilesetImage()}
       alt={`Tile ${props.index}`}
       data-tile-id={props.index}
-      style={getDynamicStyles({ ...tileData, size: tileSize })}
+      style={getDynamicStyles({ ...tileData, size: tileSize() })}
       class={`${staticStyles.tile} ${
         isSelected() || isDragOrigin() ? staticStyles.selected : ""
       } ${isDragTarget() ? staticStyles.dragTarget : ""}`}

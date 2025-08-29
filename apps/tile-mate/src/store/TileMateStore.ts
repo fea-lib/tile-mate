@@ -18,6 +18,8 @@ const initialState: TileMateStoreState = {
 
 const [store, setStore] = createStore(initialState);
 
+export const tilesets = () => store.tilesets;
+
 export const tileset = (tilesetIndex: TilesetIndex): Tileset | undefined => {
   return store.tilesets[tilesetIndex]?.tileset;
 };
@@ -229,6 +231,7 @@ export const TileMateStore = {
     return store;
   },
   // Core selectors
+  tilesets,
   tileset,
   tile,
   isSelectedTile,

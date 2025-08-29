@@ -1,10 +1,11 @@
-import { type Component, createSignal, onMount, For } from "solid-js";
+import { type Component, onMount, For } from "solid-js";
 import { Tileset } from "./Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
 import { ToggleGroup } from "../toggle/ToggleGroup";
-import { DropMode, TilesetIndex } from "../types";
+import { DropMode } from "../types";
 import { TileMateStore } from "../store";
+import { useTileMateStore } from "../store/useTileMateStore";
 
 type Props = {
   tilesetImage: string;
@@ -17,15 +18,18 @@ export const TilesetEditor: Component<Props> = ({
   tileSize,
   showGrid = false,
 }) => {
-  const [tilesetIndices, setTilesetIndices] = createSignal<TilesetIndex[]>([]);
+  const { tilesets } = useTileMateStore();
 
   onMount(async () => {
+    if (tilesets().length > 0) return;
+
     try {
-      const index1 = await TileMateStore.addTileset(tilesetImage, tileSize);
-      const index2 = await TileMateStore.addTileset(tilesetImage, tileSize);
-      const index3 = await TileMateStore.addTileset(tilesetImage, tileSize);
-      const index4 = await TileMateStore.addTileset(tilesetImage, tileSize);
-      setTilesetIndices([index1, index2, index3, index4]);
+      await Promise.all([
+        TileMateStore.addTileset(tilesetImage, tileSize),
+        TileMateStore.addTileset(tilesetImage, tileSize),
+        TileMateStore.addTileset(tilesetImage, tileSize),
+        TileMateStore.addTileset(tilesetImage, tileSize),
+      ]);
     } catch (error) {
       console.error("Failed to load tileset:", error);
     }
@@ -35,9 +39,9 @@ export const TilesetEditor: Component<Props> = ({
     <div class={staticStyles.tilesetEditor}>
       <Actions />
       <div class={staticStyles.tilesets}>
-        <For each={tilesetIndices()}>
-          {(tilesetIndex) => (
-            <Tileset tilesetIndex={tilesetIndex} showGrid={showGrid} />
+        <For each={tilesets()}>
+          {(tileset) => (
+            <Tileset tilesetIndex={tileset.tileset.index} showGrid={showGrid} />
           )}
         </For>
       </div>
