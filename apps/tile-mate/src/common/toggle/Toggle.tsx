@@ -1,4 +1,5 @@
 import { Component, JSX } from "solid-js";
+import buttonStyles from "../button/Button.module.css";
 import staticStyles from "./Toggle.module.css";
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
 
 export const Toggle: Component<Props> = (props) => {
   return (
-    <label class={staticStyles.toggle}>
+    <label class={`${buttonStyles.button} ${staticStyles.toggle}`}>
       <input
         type="radio"
         name="action"

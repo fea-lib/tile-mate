@@ -1,10 +1,11 @@
 import { type Component, onMount, For } from "solid-js";
 import { Tileset } from "../tileset/Tileset";
 import staticStyles from "./TilesetEditor.module.css";
-import { Toggle } from "../toggle/Toggle";
-import { ToggleGroup } from "../toggle/ToggleGroup";
+import { Toggle } from "../common/toggle/Toggle";
+import { ToggleGroup } from "../common/toggle/ToggleGroup";
 import { DropMode } from "../types";
 import { TileMateStore, useTileMateStore } from "../store/TileMateStore";
+import { Button } from "../common/button/Button";
 
 type Props = {
   tilesetImage: string;
@@ -51,19 +52,24 @@ export const TilesetEditor: Component<Props> = ({
 const Actions: Component = () => {
   return (
     <div class={staticStyles.actions}>
-      <label>Mode</label>
-      <ToggleGroup>
-        {Object.values(DropMode).map((value) => (
-          <Toggle
-            label={value}
-            value={value}
-            isChecked={TileMateStore.selectedMode() === value}
-            onChange={(e) =>
-              TileMateStore.selectMode(e.currentTarget.value as DropMode)
-            }
-          />
-        ))}
-      </ToggleGroup>
+      <div class={staticStyles.actionGroup}>
+        <Button label="New Tileset" />
+      </div>
+      <div class={staticStyles.actionGroup}>
+        <label>Mode</label>
+        <ToggleGroup>
+          {Object.values(DropMode).map((value) => (
+            <Toggle
+              label={value}
+              value={value}
+              isChecked={TileMateStore.selectedMode() === value}
+              onChange={(e) =>
+                TileMateStore.selectMode(e.currentTarget.value as DropMode)
+              }
+            />
+          ))}
+        </ToggleGroup>
+      </div>
     </div>
   );
 };

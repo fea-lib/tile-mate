@@ -57,12 +57,20 @@
     grid-template-columns: 1fr;
   }
 }
+
 .actions {
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 8px;
+  gap: 24px;
   padding: 8px;
   background-color: #c0c0c0;
   margin: 4px;
+}
+
+.actionGroup {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
 }
