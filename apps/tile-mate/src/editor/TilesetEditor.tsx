@@ -1,5 +1,5 @@
 import { type Component, onMount, For } from "solid-js";
-import { Tileset } from "./Tileset";
+import { Tileset } from "../tileset/Tileset";
 import staticStyles from "./TilesetEditor.module.css";
 import { Toggle } from "../toggle/Toggle";
 import { ToggleGroup } from "../toggle/ToggleGroup";
