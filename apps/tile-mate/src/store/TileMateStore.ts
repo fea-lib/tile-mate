@@ -1,21 +1,6 @@
 import { createStore } from "solid-js/store";
 import { DropMode, TileIndex, TilesetIndex, Tileset, Tile } from "../types";
-
-// Debounce utility
-const debounceMap = new Map<string, number>();
-
-const debounce = (key: string, fn: () => void, delay: number = 300) => {
-  if (debounceMap.has(key)) {
-    clearTimeout(debounceMap.get(key)!);
-  }
-
-  const timeoutId = setTimeout(() => {
-    fn();
-    debounceMap.delete(key);
-  }, delay);
-
-  debounceMap.set(key, timeoutId);
-};
+import { debounce } from "../common/debounce";
 
 type SelectedTile = [TilesetIndex, TileIndex];
 
@@ -61,20 +46,24 @@ export const isSelectedTile = (selectedTile: SelectedTile): boolean => {
   );
 };
 
-function getBlankTiles(rows: number, columns: number) {
-  const tiles: Tile[] = [];
+function resizeTiles(
+  newRows: number,
+  newColumns: number,
+  existingTiles: Tile[] = []
+) {
+  const newTiles: Tile[] = [];
 
-  for (let y = 0; y < rows; y++) {
-    for (let x = 0; x < columns; x++) {
-      tiles.push({
-        index: tiles.length,
+  for (let y = 0; y < newRows; y++) {
+    for (let x = 0; x < newColumns; x++) {
+      newTiles.push({
+        index: newTiles.length,
         imgX: x,
         imgY: y,
       });
     }
   }
 
-  return tiles;
+  return newTiles;
 }
 
 export const addTileset = (
@@ -108,7 +97,7 @@ export const addTileset = (
 
       setStore("tilesets", tilesetIndex, {
         index: tilesetIndex,
-        tiles: getBlankTiles(calculatedRows, calculatedColumns),
+        tiles: resizeTiles(calculatedRows, calculatedColumns),
         tileSize,
         columns: calculatedColumns,
         rows: calculatedRows,
@@ -170,7 +159,7 @@ export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
         "tilesets",
         tilesetIndex,
         "tiles",
-        getBlankTiles(rows(tilesetIndex), newColumns)
+        resizeTiles(rows(tilesetIndex), newColumns)
       );
     }
   });
@@ -184,7 +173,7 @@ export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
         "tilesets",
         tilesetIndex,
         "tiles",
-        getBlankTiles(newRows, columns(tilesetIndex))
+        resizeTiles(newRows, columns(tilesetIndex))
       );
     }
   });
@@ -214,7 +203,7 @@ export const setTileSize = (
         "tilesets",
         tilesetIndex,
         "tiles",
-        getBlankTiles(newRows, newColumns)
+        resizeTiles(newRows, newColumns)
       );
     }
   });
