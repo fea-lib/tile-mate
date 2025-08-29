@@ -45,6 +45,22 @@ export const isSelectedTile = (selectedTile: SelectedTile): boolean => {
   );
 };
 
+function getBlankTiles(rows: number, columns: number) {
+  const tiles: Tile[] = [];
+
+  for (let y = 0; y < rows; y++) {
+    for (let x = 0; x < columns; x++) {
+      tiles.push({
+        index: tiles.length,
+        imgX: x,
+        imgY: y,
+      });
+    }
+  }
+
+  return tiles;
+}
+
 export const addTileset = (
   tilesetImage: string,
   tileSize: number
@@ -74,20 +90,9 @@ export const addTileset = (
       const calculatedColumns = Math.floor(img.naturalWidth / tileSize);
       const calculatedRows = Math.floor(img.naturalHeight / tileSize);
 
-      const newTiles: Tile[] = [];
-      for (let y = 0; y < calculatedRows; y++) {
-        for (let x = 0; x < calculatedColumns; x++) {
-          newTiles.push({
-            index: newTiles.length,
-            imgX: x,
-            imgY: y,
-          });
-        }
-      }
-
       setStore("tilesets", tilesetIndex, {
         index: tilesetIndex,
-        tiles: newTiles,
+        tiles: getBlankTiles(calculatedRows, calculatedColumns),
         tileSize,
         columns: calculatedColumns,
         rows: calculatedRows,
@@ -141,15 +146,54 @@ export const tiles = (tilesetIndex: TilesetIndex): Tile[] => {
   return store.tilesets[tilesetIndex]?.tiles ?? [];
 };
 
-export const setColumns = (tilesetIndex: TilesetIndex, cols: number) => {
+export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
   if (store.tilesets[tilesetIndex]) {
-    setStore("tilesets", tilesetIndex, "columns", cols);
+    setStore("tilesets", tilesetIndex, "columns", newColumns);
+    setStore(
+      "tilesets",
+      tilesetIndex,
+      "tiles",
+      getBlankTiles(rows(tilesetIndex), newColumns)
+    );
   }
 };
 
 export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
   if (store.tilesets[tilesetIndex]) {
     setStore("tilesets", tilesetIndex, "rows", newRows);
+    setStore(
+      "tilesets",
+      tilesetIndex,
+      "tiles",
+      getBlankTiles(newRows, columns(tilesetIndex))
+    );
+  }
+};
+
+export const setTileSize = (
+  tilesetIndex: TilesetIndex,
+  newTileSize: number
+) => {
+  if (store.tilesets[tilesetIndex]) {
+    const tilesetWidth =
+      store.tilesets[tilesetIndex].columns *
+      store.tilesets[tilesetIndex].tileSize;
+
+    const tilesetHeight =
+      store.tilesets[tilesetIndex].rows * store.tilesets[tilesetIndex].tileSize;
+
+    const newColumns = Math.floor(tilesetWidth / newTileSize);
+    const newRows = Math.floor(tilesetHeight / newTileSize);
+
+    setStore("tilesets", tilesetIndex, "tileSize", newTileSize);
+    setStore("tilesets", tilesetIndex, "columns", newColumns);
+    setStore("tilesets", tilesetIndex, "rows", newRows);
+    setStore(
+      "tilesets",
+      tilesetIndex,
+      "tiles",
+      getBlankTiles(newRows, newColumns)
+    );
   }
 };
 
@@ -308,6 +352,7 @@ export const TileMateStore = {
   selectMode,
   setColumns,
   setRows,
+  setTileSize,
   replaceTile,
   swapTiles,
   replaceTileCross,
@@ -323,6 +368,7 @@ export const useTileMateStore = () => {
       TileMateStore.tile(tileset, tile),
     columns: (tileset: TilesetIndex) => TileMateStore.columns(tileset),
     rows: (tileset: TilesetIndex) => TileMateStore.rows(tileset),
+    tileSize: (tileset: TilesetIndex) => TileMateStore.tileSize(tileset),
     selectedTile: () => TileMateStore.selectedTile() ?? null,
 
     // Setters
@@ -330,6 +376,8 @@ export const useTileMateStore = () => {
       TileMateStore.setColumns(tileset, cols),
     setRows: (tileset: TilesetIndex, rows: number) =>
       TileMateStore.setRows(tileset, rows),
+    setTileSize: (tileset: TilesetIndex, size: number) =>
+      TileMateStore.setTileSize(tileset, size),
     selectTile: (selectedTile: SelectedTile | undefined) =>
       TileMateStore.selectTile(selectedTile),
 

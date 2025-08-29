@@ -1,8 +1,9 @@
 import { For, type Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTileMateStore, TileMateStore } from "../store/TileMateStore";
+import { useTileMateStore } from "../store/TileMateStore";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
+import { Input } from "../common/input/Input";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -13,11 +14,32 @@ export const Tileset: Component<Props> = ({
   tilesetIndex,
   showGrid = false,
 }) => {
-  const store = useTileMateStore();
-  const tileSize = () => TileMateStore.tileSize(tilesetIndex);
-  const columns = () => store.columns(tilesetIndex);
-  const rows = () => store.rows(tilesetIndex);
-  const tiles = () => store.tiles(tilesetIndex);
+  const { columns, rows, setColumns, setRows, setTileSize, tiles, tileSize } =
+    useTileMateStore();
+
+  const handleTileSizeChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = parseInt(target.value);
+    if (!isNaN(value) && value > 0) {
+      setTileSize(tilesetIndex, value);
+    }
+  };
+
+  const handleColumnsChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = parseInt(target.value);
+    if (!isNaN(value) && value > 0) {
+      setColumns(tilesetIndex, value);
+    }
+  };
+
+  const handleRowsChange = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    const value = parseInt(target.value);
+    if (!isNaN(value) && value > 0) {
+      setRows(tilesetIndex, value);
+    }
+  };
 
   const grid = toGridOptions(showGrid);
 
@@ -25,22 +47,48 @@ export const Tileset: Component<Props> = ({
     <div class={staticStyles.tilesetFrame}>
       <div class={staticStyles.tilesetHeader}>
         <span class={staticStyles.tilesetTitle}>Tileset {tilesetIndex}</span>
-        <div class={staticStyles.tilesetInfo}>
-          {TileMateStore.columns(tilesetIndex)} ×{" "}
-          {TileMateStore.rows(tilesetIndex)} tiles
+        <div class={staticStyles.tilesetControls}>
+          <div class={staticStyles.controlGroup}>
+            <label>Tile Size:</label>
+            <Input
+              type="number"
+              value={tileSize(tilesetIndex)}
+              onInput={handleTileSizeChange}
+              min={1}
+            />
+          </div>
+          <div class={staticStyles.controlGroup}>
+            <label>Columns:</label>
+            <Input
+              type="number"
+              value={columns(tilesetIndex)}
+              onInput={handleColumnsChange}
+              min={1}
+            />
+          </div>
+          <div class={staticStyles.controlGroup}>
+            <label>Rows:</label>
+            <Input
+              type="number"
+              value={rows(tilesetIndex)}
+              onInput={handleRowsChange}
+              min={1}
+            />
+          </div>
         </div>
       </div>
+
       <div class={staticStyles.tilesetContent}>
         <div
           class={staticStyles.tileset}
           style={getDynamicStyle({
             grid,
-            tileSize: tileSize(),
-            columns: columns(),
-            rows: rows(),
+            tileSize: tileSize(tilesetIndex),
+            columns: columns(tilesetIndex),
+            rows: rows(tilesetIndex),
           })}
         >
-          <For each={tiles()}>
+          <For each={tiles(tilesetIndex)}>
             {({ index }) => <Tile tilesetIndex={tilesetIndex} index={index} />}
           </For>
         </div>

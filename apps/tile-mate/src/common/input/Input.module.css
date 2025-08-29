@@ -1,0 +1,21 @@
+.input {
+  border: 2px solid;
+  border-color: #808080 #ffffff #ffffff #808080;
+  background-color: #ffffff;
+  color: #000000;
+  font-family: "MS Sans Serif", sans-serif;
+  font-size: 11px;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #000080 #c0c0c0 #c0c0c0 #000080;
+}
+
+.input:disabled {
+  background-color: #c0c0c0;
+  color: #808080;
+  border-color: #808080 #ffffff #ffffff #808080;
+}

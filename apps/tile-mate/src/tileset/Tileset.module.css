@@ -8,30 +8,46 @@
 
 .tilesetHeader {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  gap: 24px;
   padding: 4px 8px;
   background-color: #c0c0c0;
   border-bottom: 1px solid #808080;
-  font-weight: bold;
-  font-family: "MS Sans Serif", sans-serif;
-  font-size: 11px;
+  align-items: center;
 }
 
 .tilesetTitle {
+  font-weight: bold;
   font-size: 12px;
   color: #000000;
 }
 
-.tilesetInfo {
-  font-size: 10px;
-  color: #555555;
-  font-weight: normal;
+.tilesetControls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.controlGroup {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: "MS Sans Serif", sans-serif;
+  font-size: 11px;
+}
+
+.controlGroup label {
+  color: #000000;
+  white-space: nowrap;
+}
+
+.controlGroup input {
+  width: 60px;
 }
 
 .tilesetContent {
   border: 8px solid #ffffff;
-  background-color: magenta;
+  background-color: #ffffff;
   flex: 1;
   overflow: auto;
 }
