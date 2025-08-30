@@ -1,5 +1,5 @@
 export const DropMode = {
-  Replace: "Replace",
+  Copy: "Copy",
   Swap: "Swap",
 };
 export type DropMode = (typeof DropMode)[keyof typeof DropMode];

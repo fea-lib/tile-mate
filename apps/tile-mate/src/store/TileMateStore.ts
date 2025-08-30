@@ -12,7 +12,7 @@ export type TileMateStoreState = {
 
 const initialState: TileMateStoreState = {
   tilesets: [],
-  mode: DropMode.Replace,
+  mode: DropMode.Copy,
   selectedTile: undefined,
 };
 
@@ -254,7 +254,7 @@ export const setTileSize = (
   });
 };
 
-export const replaceTile = (
+export const copyTile = (
   sourceTilesetIndex: TilesetIndex,
   sourceIndex: TileIndex,
   targetTilesetIndex: TilesetIndex,
@@ -269,29 +269,12 @@ export const replaceTile = (
   const sourceTile = store.tilesets[sourceTilesetIndex].tiles[sourceIndex];
 
   if (sourceTile) {
-    const movedSourceTile = {
+    const copiedTile = {
       ...sourceTile,
       index: targetIndex,
     };
 
-    const emptyOriginTile = {
-      index: sourceIndex,
-    };
-
-    setStore(
-      "tilesets",
-      targetTilesetIndex,
-      "tiles",
-      targetIndex,
-      movedSourceTile
-    );
-    setStore(
-      "tilesets",
-      sourceTilesetIndex,
-      "tiles",
-      sourceIndex,
-      emptyOriginTile
-    );
+    setStore("tilesets", targetTilesetIndex, "tiles", targetIndex, copiedTile);
     setStore("selectedTile", [targetTilesetIndex, targetIndex]);
   }
 };
@@ -360,7 +343,7 @@ const TileMateStore = {
   setColumns,
   setRows,
   setTileSize,
-  replaceTile,
+  replaceTile: copyTile,
   swapTiles,
 };
 
@@ -384,7 +367,7 @@ export const useTileMateStore = () => {
     setRows: TileMateStore.setRows,
     setTileSize: TileMateStore.setTileSize,
     selectTile: TileMateStore.selectTile,
-    replaceTile: TileMateStore.replaceTile,
+    copyTile: TileMateStore.replaceTile,
     swapTiles: TileMateStore.swapTiles,
     selectMode: TileMateStore.selectMode,
   };

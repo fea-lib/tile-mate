@@ -25,6 +25,7 @@ export const TilesetEditor: Component<Props> = ({
 
     try {
       await Promise.all([addTileset(tilesetImage, tileSize)]);
+      await Promise.all([addTileset(tilesetImage, tileSize)]);
     } catch (error) {
       console.error("Failed to load tileset:", error);
     }

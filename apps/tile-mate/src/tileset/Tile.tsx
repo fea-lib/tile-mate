@@ -17,7 +17,7 @@ export const Tile: Component<Props> = (props) => {
     tile,
     tilesetImage,
     tileSize,
-    replaceTile,
+    copyTile,
     swapTiles,
   } = useTileMateStore();
 
@@ -42,8 +42,8 @@ export const Tile: Component<Props> = (props) => {
             props.index !== targetId ||
             props.tilesetIndex !== targetTilesetIndex
           ) {
-            if (mode === DropMode.Replace) {
-              replaceTile(
+            if (mode === DropMode.Copy) {
+              copyTile(
                 props.tilesetIndex,
                 props.index,
                 targetTilesetIndex,
@@ -102,6 +102,7 @@ export const Tile: Component<Props> = (props) => {
       <span
         data-tile-id={props.index}
         data-tileset-id={props.tilesetIndex}
+        data-img="none"
         style={getDynamicStyles({ size: tileSize(props.tilesetIndex) })}
         class={`${staticStyles.tile} ${
           isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
@@ -120,6 +121,7 @@ export const Tile: Component<Props> = (props) => {
       alt={`Tile ${props.index}`}
       data-tile-id={props.index}
       data-tileset-id={props.tilesetIndex}
+      data-img={JSON.stringify([tileData.imgX, tileData.imgY])}
       style={getDynamicStyles({
         ...tileData,
         size: tileSize(props.tilesetIndex),
