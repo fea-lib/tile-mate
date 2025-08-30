@@ -1,9 +1,20 @@
 import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
+import solid from "vite-plugin-solid";
+import devtools from "solid-devtools/vite";
 
 export default defineConfig(({ mode }) => ({
   base: mode === "production" ? "/tile-mate/" : "/",
-  plugins: [solidPlugin()],
+  plugins: [
+    solid(),
+    devtools({
+      autoname: true,
+      locator: {
+        targetIDE: "vscode",
+        componentLocation: true,
+        jsxLocation: true,
+      },
+    }),
+  ],
   server: {
     port: 3000,
   },

@@ -46,20 +46,56 @@ export const isSelectedTile = (selectedTile: SelectedTile): boolean => {
   );
 };
 
-function resizeTiles(
+function createTiles(
   newRows: number,
   newColumns: number,
-  existingTiles: Tile[] = []
+  existingTiles?: Tile[],
+  oldColumns?: number,
+  oldRows?: number
 ) {
   const newTiles: Tile[] = [];
 
+  const haveTilesExisted =
+    existingTiles && existingTiles.length > 0 && oldColumns && oldRows;
+
+  // Create new grid
   for (let y = 0; y < newRows; y++) {
     for (let x = 0; x < newColumns; x++) {
-      newTiles.push({
-        index: newTiles.length,
-        imgX: x,
-        imgY: y,
-      });
+      const newIndex = y * newColumns + x;
+
+      if (!haveTilesExisted) {
+        newTiles.push({
+          index: newIndex,
+          imgX: x,
+          imgY: y,
+        });
+
+        continue;
+      }
+
+      // Check if this position existed in the old grid
+      if (x < oldColumns && y < oldRows) {
+        const oldIndex = y * oldColumns + x;
+        const existingTile = existingTiles[oldIndex];
+
+        if (existingTile) {
+          // Preserve existing tile but update index
+          newTiles.push({
+            ...existingTile,
+            index: newIndex,
+          });
+        } else {
+          // Create empty tile
+          newTiles.push({
+            index: newIndex,
+          });
+        }
+      } else {
+        // Create empty tile for positions outside old grid
+        newTiles.push({
+          index: newIndex,
+        });
+      }
     }
   }
 
@@ -97,7 +133,7 @@ export const addTileset = (
 
       setStore("tilesets", tilesetIndex, {
         index: tilesetIndex,
-        tiles: resizeTiles(calculatedRows, calculatedColumns),
+        tiles: createTiles(calculatedRows, calculatedColumns),
         tileSize,
         columns: calculatedColumns,
         rows: calculatedRows,
@@ -154,12 +190,17 @@ export const tiles = (tilesetIndex: TilesetIndex): Tile[] => {
 export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
   debounce(`columns-${tilesetIndex}`, () => {
     if (store.tilesets[tilesetIndex]) {
+      const tileset = store.tilesets[tilesetIndex];
+      const oldColumns = tileset.columns;
+      const oldRows = tileset.rows;
+      const existingTiles = tileset.tiles;
+
       setStore("tilesets", tilesetIndex, "columns", newColumns);
       setStore(
         "tilesets",
         tilesetIndex,
         "tiles",
-        resizeTiles(rows(tilesetIndex), newColumns)
+        createTiles(oldRows, newColumns, existingTiles, oldColumns, oldRows)
       );
     }
   });
@@ -168,12 +209,17 @@ export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
 export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
   debounce(`rows-${tilesetIndex}`, () => {
     if (store.tilesets[tilesetIndex]) {
+      const tileset = store.tilesets[tilesetIndex];
+      const oldColumns = tileset.columns;
+      const oldRows = tileset.rows;
+      const existingTiles = tileset.tiles;
+
       setStore("tilesets", tilesetIndex, "rows", newRows);
       setStore(
         "tilesets",
         tilesetIndex,
         "tiles",
-        resizeTiles(newRows, columns(tilesetIndex))
+        createTiles(newRows, oldColumns, existingTiles, oldColumns, oldRows)
       );
     }
   });
@@ -185,13 +231,12 @@ export const setTileSize = (
 ) => {
   debounce(`tileSize-${tilesetIndex}`, () => {
     if (store.tilesets[tilesetIndex]) {
-      const tilesetWidth =
-        store.tilesets[tilesetIndex].columns *
-        store.tilesets[tilesetIndex].tileSize;
+      const tileset = store.tilesets[tilesetIndex];
+      const oldColumns = tileset.columns;
+      const oldRows = tileset.rows;
 
-      const tilesetHeight =
-        store.tilesets[tilesetIndex].rows *
-        store.tilesets[tilesetIndex].tileSize;
+      const tilesetWidth = oldColumns * tileset.tileSize;
+      const tilesetHeight = oldRows * tileset.tileSize;
 
       const newColumns = Math.floor(tilesetWidth / newTileSize);
       const newRows = Math.floor(tilesetHeight / newTileSize);
@@ -203,142 +248,92 @@ export const setTileSize = (
         "tilesets",
         tilesetIndex,
         "tiles",
-        resizeTiles(newRows, newColumns)
+        createTiles(newRows, newColumns)
       );
     }
   });
 };
 
 export const replaceTile = (
-  tilesetIndex: TilesetIndex,
-  targetId: TileIndex,
-  sourceId: TileIndex
+  sourceTilesetIndex: TilesetIndex,
+  sourceIndex: TileIndex,
+  targetTilesetIndex: TilesetIndex,
+  targetIndex: TileIndex
 ) => {
-  if (!store.tilesets[tilesetIndex]) return;
+  if (
+    !store.tilesets[sourceTilesetIndex] ||
+    !store.tilesets[targetTilesetIndex]
+  )
+    return;
 
-  const currentTiles = [...store.tilesets[tilesetIndex].tiles];
-  const sourceTile = currentTiles[sourceId];
+  const sourceTile = store.tilesets[sourceTilesetIndex].tiles[sourceIndex];
 
   if (sourceTile) {
-    // Replace target with source tile's image position
-    currentTiles[targetId] = {
+    const movedSourceTile = {
       ...sourceTile,
-      index: currentTiles[targetId].index,
+      index: targetIndex,
     };
 
-    // Reset source to its original position (identity)
-    currentTiles[sourceId] = {
-      index: currentTiles[sourceId].index,
+    const emptyOriginTile = {
+      index: sourceIndex,
     };
 
-    setStore("tilesets", tilesetIndex, "tiles", currentTiles);
-    setStore("selectedTile", [tilesetIndex, targetId]);
+    setStore(
+      "tilesets",
+      targetTilesetIndex,
+      "tiles",
+      targetIndex,
+      movedSourceTile
+    );
+    setStore(
+      "tilesets",
+      sourceTilesetIndex,
+      "tiles",
+      sourceIndex,
+      emptyOriginTile
+    );
+    setStore("selectedTile", [targetTilesetIndex, targetIndex]);
   }
 };
 
 export const swapTiles = (
-  tilesetIndex: TilesetIndex,
-  tileId1: TileIndex,
-  tileId2: TileIndex
-) => {
-  if (!store.tilesets[tilesetIndex]) return;
-
-  const currentTiles = [...store.tilesets[tilesetIndex].tiles];
-  const tile1 = { ...currentTiles[tileId1] };
-  const tile2 = { ...currentTiles[tileId2] };
-
-  if (tile1 && tile2) {
-    // Swap the tiles
-    currentTiles[tileId1] = {
-      ...tile2,
-      index: tileId1,
-    };
-
-    currentTiles[tileId2] = {
-      ...tile1,
-      index: tileId2,
-    };
-
-    setStore("tilesets", tilesetIndex, "tiles", currentTiles);
-    setStore("selectedTile", [tilesetIndex, tileId2]);
-  }
-};
-
-// Cross-tileset operations
-export const replaceTileCross = (
   sourceTilesetIndex: TilesetIndex,
-  sourceId: TileIndex,
+  sourceIndex: TileIndex,
   targetTilesetIndex: TilesetIndex,
-  targetId: TileIndex
+  targetIndex: TileIndex
 ) => {
-  if (
-    !store.tilesets[sourceTilesetIndex] ||
-    !store.tilesets[targetTilesetIndex]
-  )
-    return;
+  if (!store.tilesets[sourceTilesetIndex]) return;
+  if (!store.tilesets[targetTilesetIndex]) return;
+  if (!store.tilesets[sourceTilesetIndex].tiles[sourceIndex]) return;
+  if (!store.tilesets[targetTilesetIndex].tiles[targetIndex]) return;
 
-  const sourceTiles = [...store.tilesets[sourceTilesetIndex].tiles];
-  const targetTiles = [...store.tilesets[targetTilesetIndex].tiles];
-  const sourceTile = sourceTiles[sourceId];
+  const swappedSourceTile = {
+    ...store.tilesets[sourceTilesetIndex].tiles[sourceIndex],
+    index: targetIndex,
+  };
+  const swappedTargetTile = {
+    ...store.tilesets[targetTilesetIndex].tiles[targetIndex],
+    index: sourceIndex,
+  };
 
-  if (sourceTile) {
-    // Replace target with source tile's image position
-    targetTiles[targetId] = {
-      ...sourceTile,
-      index: targetTiles[targetId].index,
-    };
-
-    // Reset source to its original position (identity) only if it's in a different tileset
-    if (sourceTilesetIndex !== targetTilesetIndex) {
-      sourceTiles[sourceId] = {
-        index: sourceTiles[sourceId].index,
-      };
-      setStore("tilesets", sourceTilesetIndex, "tiles", sourceTiles);
-    }
-
-    setStore("tilesets", targetTilesetIndex, "tiles", targetTiles);
-    setStore("selectedTile", [targetTilesetIndex, targetId]);
-  }
+  setStore(
+    "tilesets",
+    sourceTilesetIndex,
+    "tiles",
+    sourceIndex,
+    swappedTargetTile
+  );
+  setStore(
+    "tilesets",
+    targetTilesetIndex,
+    "tiles",
+    targetIndex,
+    swappedSourceTile
+  );
+  setStore("selectedTile", [targetTilesetIndex, targetIndex]);
 };
 
-export const swapTilesCross = (
-  sourceTilesetIndex: TilesetIndex,
-  sourceId: TileIndex,
-  targetTilesetIndex: TilesetIndex,
-  targetId: TileIndex
-) => {
-  if (
-    !store.tilesets[sourceTilesetIndex] ||
-    !store.tilesets[targetTilesetIndex]
-  )
-    return;
-
-  const sourceTiles = [...store.tilesets[sourceTilesetIndex].tiles];
-  const targetTiles = [...store.tilesets[targetTilesetIndex].tiles];
-  const sourceTile = { ...sourceTiles[sourceId] };
-  const targetTile = { ...targetTiles[targetId] };
-
-  if (sourceTilesetIndex === targetTilesetIndex) {
-    // Same tileset - use existing swap logic
-    swapTiles(sourceTilesetIndex, sourceId, targetId);
-  } else {
-    // Different tilesets - exchange tile data
-    sourceTiles[sourceId] = {
-      ...targetTile,
-      index: sourceId,
-    };
-    targetTiles[targetId] = {
-      ...sourceTile,
-      index: targetId,
-    };
-
-    setStore("tilesets", sourceTilesetIndex, "tiles", sourceTiles);
-    setStore("tilesets", targetTilesetIndex, "tiles", targetTiles);
-    setStore("selectedTile", [targetTilesetIndex, targetId]);
-  }
-};
-
-export const TileMateStore = {
+const TileMateStore = {
   get state() {
     return store;
   },
@@ -367,69 +362,31 @@ export const TileMateStore = {
   setTileSize,
   replaceTile,
   swapTiles,
-  replaceTileCross,
-  swapTilesCross,
 };
 
 export const useTileMateStore = () => {
   return {
-    // Properties
-    tilesets: () => TileMateStore.tilesets(),
-    tiles: (tileset: TilesetIndex) => TileMateStore.tiles(tileset),
-    tile: (tileset: TilesetIndex, tile: TileIndex) =>
-      TileMateStore.tile(tileset, tile),
-    columns: (tileset: TilesetIndex) => TileMateStore.columns(tileset),
-    rows: (tileset: TilesetIndex) => TileMateStore.rows(tileset),
-    tileSize: (tileset: TilesetIndex) => TileMateStore.tileSize(tileset),
-    selectedTile: () => TileMateStore.selectedTile() ?? null,
+    // Queries
+    tilesets: TileMateStore.tilesets,
+    tilesetImage: TileMateStore.tilesetImage,
+    tiles: TileMateStore.tiles,
+    tile: TileMateStore.tile,
+    columns: TileMateStore.columns,
+    rows: TileMateStore.rows,
+    tileSize: TileMateStore.tileSize,
+    isSelectedTile: TileMateStore.isSelectedTile,
+    selectedTile: TileMateStore.selectedTile,
+    selectedMode: TileMateStore.selectedMode,
 
-    // Setters
-    setColumns: (tileset: TilesetIndex, cols: number) =>
-      TileMateStore.setColumns(tileset, cols),
-    setRows: (tileset: TilesetIndex, rows: number) =>
-      TileMateStore.setRows(tileset, rows),
-    setTileSize: (tileset: TilesetIndex, size: number) =>
-      TileMateStore.setTileSize(tileset, size),
-    selectTile: (selectedTile: SelectedTile | undefined) =>
-      TileMateStore.selectTile(selectedTile),
-
-    // Operations
-    replaceTile: (
-      tileset: TilesetIndex,
-      targetId: TileIndex,
-      sourceId: TileIndex
-    ) => TileMateStore.replaceTile(tileset, targetId, sourceId),
-    swapTiles: (
-      tileset: TilesetIndex,
-      tileId1: TileIndex,
-      tileId2: TileIndex
-    ) => TileMateStore.swapTiles(tileset, tileId1, tileId2),
-
-    // Cross-tileset operations
-    replaceTileCross: (
-      sourceTilesetIndex: TilesetIndex,
-      sourceId: TileIndex,
-      targetTilesetIndex: TilesetIndex,
-      targetId: TileIndex
-    ) =>
-      TileMateStore.replaceTileCross(
-        sourceTilesetIndex,
-        sourceId,
-        targetTilesetIndex,
-        targetId
-      ),
-    swapTilesCross: (
-      sourceTilesetIndex: TilesetIndex,
-      sourceId: TileIndex,
-      targetTilesetIndex: TilesetIndex,
-      targetId: TileIndex
-    ) =>
-      TileMateStore.swapTilesCross(
-        sourceTilesetIndex,
-        sourceId,
-        targetTilesetIndex,
-        targetId
-      ),
+    // Commands
+    addTileset: TileMateStore.addTileset,
+    setColumns: TileMateStore.setColumns,
+    setRows: TileMateStore.setRows,
+    setTileSize: TileMateStore.setTileSize,
+    selectTile: TileMateStore.selectTile,
+    replaceTile: TileMateStore.replaceTile,
+    swapTiles: TileMateStore.swapTiles,
+    selectMode: TileMateStore.selectMode,
   };
 };
 

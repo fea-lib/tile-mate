@@ -2,7 +2,7 @@ import type { Component } from "solid-js";
 import { useDragAndDrop } from "../common/drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
-import { useTileMateStore, TileMateStore } from "../store/TileMateStore";
+import { useTileMateStore } from "../store/TileMateStore";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -10,21 +10,20 @@ type Props = {
 };
 
 export const Tile: Component<Props> = (props) => {
-  const store = useTileMateStore();
-  const tilesetImage = () => TileMateStore.tilesetImage(props.tilesetIndex);
-  const tileSize = () => TileMateStore.tileSize(props.tilesetIndex);
-  const selectedTile = () => store.selectedTile();
-  const selectTile = (id: TileIndex | null) =>
-    store.selectTile([props.tilesetIndex, id]);
-  const tile = () => store.tile(props.tilesetIndex, props.index);
-  const replaceTile = (targetId: TileIndex, sourceId: TileIndex) =>
-    store.replaceTile(props.tilesetIndex, targetId, sourceId);
-  const swapTiles = (tileId1: TileIndex, tileId2: TileIndex) =>
-    store.swapTiles(props.tilesetIndex, tileId1, tileId2);
+  const {
+    isSelectedTile,
+    selectedMode,
+    selectTile,
+    tile,
+    tilesetImage,
+    tileSize,
+    replaceTile,
+    swapTiles,
+  } = useTileMateStore();
 
   const { onPointerDown, dragState } = useDragAndDrop({
     onPickUp: () => {
-      selectTile(props.index);
+      selectTile([props.tilesetIndex, props.index]);
     },
     onDrop: (hoveringElement) => {
       if (hoveringElement) {
@@ -36,7 +35,7 @@ export const Tile: Component<Props> = (props) => {
           const targetTilesetIndex = parseInt(
             tileElement.dataset.tilesetId || "0"
           );
-          const mode = TileMateStore.selectedMode();
+          const mode = selectedMode();
 
           // Don't do anything if source and target are the same tile in the same tileset
           if (
@@ -44,46 +43,25 @@ export const Tile: Component<Props> = (props) => {
             props.tilesetIndex !== targetTilesetIndex
           ) {
             if (mode === DropMode.Replace) {
-              if (props.tilesetIndex === targetTilesetIndex) {
-                // Same tileset - use existing function
-                replaceTile(targetId, props.index);
-              } else {
-                // Cross-tileset replace
-                store.replaceTileCross(
-                  props.tilesetIndex,
-                  props.index,
-                  targetTilesetIndex,
-                  targetId
-                );
-              }
+              replaceTile(
+                props.tilesetIndex,
+                props.index,
+                targetTilesetIndex,
+                targetId
+              );
             } else if (mode === DropMode.Swap) {
-              if (props.tilesetIndex === targetTilesetIndex) {
-                // Same tileset - use existing function
-                swapTiles(props.index, targetId);
-              } else {
-                // Cross-tileset swap
-                store.swapTilesCross(
-                  props.tilesetIndex,
-                  props.index,
-                  targetTilesetIndex,
-                  targetId
-                );
-              }
+              swapTiles(
+                props.tilesetIndex,
+                props.index,
+                targetTilesetIndex,
+                targetId
+              );
             }
           }
         }
       }
     },
   });
-
-  const isSelected = () => {
-    const selected = selectedTile();
-    return (
-      selected &&
-      selected[0] === props.tilesetIndex &&
-      selected[1] === props.index
-    );
-  };
 
   const isDragOrigin = () => {
     const drag = dragState();
@@ -117,18 +95,20 @@ export const Tile: Component<Props> = (props) => {
     );
   };
 
-  const tileData = tile();
+  const tileData = tile(props.tilesetIndex, props.index);
 
   if (!tileData || !("imgX" in tileData) || !("imgY" in tileData)) {
     return (
       <span
         data-tile-id={props.index}
         data-tileset-id={props.tilesetIndex}
-        style={getDynamicStyles({ size: tileSize() })}
+        style={getDynamicStyles({ size: tileSize(props.tilesetIndex) })}
         class={`${staticStyles.tile} ${
-          isSelected() || isDragOrigin() ? staticStyles.selected : ""
+          isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
+            ? staticStyles.selected
+            : ""
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-        on:click={() => selectTile(props.index)}
+        on:click={() => selectTile([props.tilesetIndex, props.index])}
         on:pointerdown={onPointerDown}
       ></span>
     );
@@ -136,15 +116,20 @@ export const Tile: Component<Props> = (props) => {
 
   return (
     <img
-      src={tilesetImage()}
+      src={tilesetImage(props.tilesetIndex)}
       alt={`Tile ${props.index}`}
       data-tile-id={props.index}
       data-tileset-id={props.tilesetIndex}
-      style={getDynamicStyles({ ...tileData, size: tileSize() })}
+      style={getDynamicStyles({
+        ...tileData,
+        size: tileSize(props.tilesetIndex),
+      })}
       class={`${staticStyles.tile} ${
-        isSelected() || isDragOrigin() ? staticStyles.selected : ""
+        isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
+          ? staticStyles.selected
+          : ""
       } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
-      on:click={() => selectTile(props.index)}
+      on:click={() => selectTile([props.tilesetIndex, props.index])}
       on:pointerdown={onPointerDown}
     />
   );
