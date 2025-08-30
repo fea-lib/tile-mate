@@ -159,8 +159,12 @@ export const addTileset = (
 };
 
 // Additional tileset management functions
+export const hasImage = (tilesetIndex: TilesetIndex): boolean => {
+  return !!store.tilesets[tilesetIndex]?.image;
+};
+
 export const isImageLoading = (tilesetIndex: TilesetIndex): boolean => {
-  return store.tilesets[tilesetIndex]?.image.isLoading ?? false;
+  return store.tilesets[tilesetIndex]?.image?.isLoading ?? false;
 };
 
 export const columns = (tilesetIndex: TilesetIndex): number => {
@@ -171,8 +175,10 @@ export const rows = (tilesetIndex: TilesetIndex): number => {
   return store.tilesets[tilesetIndex]?.rows ?? 0;
 };
 
-export const tilesetImage = (tilesetIndex: TilesetIndex): string => {
-  return store.tilesets[tilesetIndex]?.image.url ?? "";
+export const tilesetImage = (
+  tilesetIndex: TilesetIndex
+): string | undefined => {
+  return store.tilesets[tilesetIndex]?.image?.url;
 };
 
 export const tileSize = (tilesetIndex: TilesetIndex): number => {

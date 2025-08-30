@@ -97,7 +97,12 @@ export const Tile: Component<Props> = (props) => {
 
   const tileData = tile(props.tilesetIndex, props.index);
 
-  if (!tileData || !("imgX" in tileData) || !("imgY" in tileData)) {
+  if (
+    !tilesetImage(props.tilesetIndex) ||
+    !tileData ||
+    !("imgX" in tileData) ||
+    !("imgY" in tileData)
+  ) {
     return (
       <span
         data-tile-id={props.index}

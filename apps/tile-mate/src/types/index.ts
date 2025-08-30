@@ -25,7 +25,7 @@ export type Tileset = {
   tileSize: number;
   columns: number;
   rows: number;
-  image: {
+  image?: {
     url: string;
     isLoading: boolean;
   };
