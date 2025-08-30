@@ -1,16 +1,26 @@
-import type { Component } from "solid-js";
+import { onMount, type Component } from "solid-js";
 import tilesetImage from "./tileset.png";
 import { TilesetEditor } from "./editor/TilesetEditor";
 import { DragContextProvider } from "./common/drag/DragContext";
-import { attachDebugger } from "@solid-devtools/debugger";
+import { useTileMateStore } from "./store/TileMateStore";
 
 const tileSize = 48;
 
 const App: Component = () => {
-  attachDebugger();
+  const { addTileset, tilesets } = useTileMateStore();
+
+  onMount(async () => {
+    if (tilesets().length > 0) return;
+
+    try {
+      await Promise.all([addTileset(tilesetImage, tileSize)]);
+    } catch (error) {
+      console.error("Failed to load tileset:", error);
+    }
+  });
   return (
     <DragContextProvider>
-      <TilesetEditor tilesetImage={tilesetImage} tileSize={tileSize} />
+      <TilesetEditor />
     </DragContextProvider>
   );
 };

@@ -8,24 +8,8 @@ import { Button } from "../common/button/Button";
 import staticStyles from "./TilesetEditor.module.css";
 import { Input } from "../common/input/Input";
 
-type Props = {
-  tilesetImage: string;
-  tileSize: number;
-};
-
-export const TilesetEditor: Component<Props> = ({ tilesetImage, tileSize }) => {
-  const { addTileset, tilesets } = useTileMateStore();
-
-  onMount(async () => {
-    if (tilesets().length > 0) return;
-
-    try {
-      await Promise.all([addTileset(tilesetImage, tileSize)]);
-      await Promise.all([addTileset(tilesetImage, tileSize)]);
-    } catch (error) {
-      console.error("Failed to load tileset:", error);
-    }
-  });
+export const TilesetEditor: Component = () => {
+  const { tilesets } = useTileMateStore();
 
   return (
     <div class={staticStyles.tilesetEditor}>
