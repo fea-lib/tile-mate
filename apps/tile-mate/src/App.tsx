@@ -10,7 +10,7 @@ const App: Component = () => {
   attachDebugger();
   return (
     <DragContextProvider>
-      <TilesetEditor showGrid tilesetImage={tilesetImage} tileSize={tileSize} />
+      <TilesetEditor tilesetImage={tilesetImage} tileSize={tileSize} />
     </DragContextProvider>
   );
 };

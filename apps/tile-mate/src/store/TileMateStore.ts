@@ -8,12 +8,14 @@ export type TileMateStoreState = {
   tilesets: Tileset[];
   selectedTile: SelectedTile | undefined;
   mode: DropMode;
+  showGrid: boolean | { color?: string; gap?: number };
 };
 
 const initialState: TileMateStoreState = {
   tilesets: [],
   mode: DropMode.Copy,
   selectedTile: undefined,
+  showGrid: true,
 };
 
 const [store, setStore] = createStore(initialState);
@@ -154,12 +156,6 @@ export const addTileset = (
 
     img.src = tilesetImage;
   });
-};
-
-export const selectedMode = () => store.mode;
-
-export const selectMode = (mode: DropMode) => {
-  setStore("mode", mode);
 };
 
 // Additional tileset management functions
@@ -316,61 +312,42 @@ export const swapTiles = (
   setStore("selectedTile", [targetTilesetIndex, targetIndex]);
 };
 
-const TileMateStore = {
-  get state() {
-    return store;
-  },
-  // Core selectors
-  tilesets,
-  tileset,
-  tile,
-  isSelectedTile,
-  selectedTile,
-  selectedMode,
+export const selectedMode = () => store.mode;
 
-  // Tileset properties
-  isImageLoading,
-  columns,
-  rows,
-  tilesetImage,
-  tileSize,
-  tiles,
+export const selectMode = (mode: DropMode) => {
+  setStore("mode", mode);
+};
 
-  // Mutations
-  selectTile,
-  addTileset,
-  selectMode,
-  setColumns,
-  setRows,
-  setTileSize,
-  replaceTile: copyTile,
-  swapTiles,
+export const showGrid = () => store.showGrid;
+
+export const setShowGrid = (value: TileMateStoreState["showGrid"]) => {
+  setStore("showGrid", value);
 };
 
 export const useTileMateStore = () => {
   return {
     // Queries
-    tilesets: TileMateStore.tilesets,
-    tilesetImage: TileMateStore.tilesetImage,
-    tiles: TileMateStore.tiles,
-    tile: TileMateStore.tile,
-    columns: TileMateStore.columns,
-    rows: TileMateStore.rows,
-    tileSize: TileMateStore.tileSize,
-    isSelectedTile: TileMateStore.isSelectedTile,
-    selectedTile: TileMateStore.selectedTile,
-    selectedMode: TileMateStore.selectedMode,
+    tilesets,
+    tilesetImage,
+    tiles,
+    tile,
+    columns,
+    rows,
+    tileSize,
+    isSelectedTile,
+    selectedTile,
+    selectedMode,
+    showGrid,
 
     // Commands
-    addTileset: TileMateStore.addTileset,
-    setColumns: TileMateStore.setColumns,
-    setRows: TileMateStore.setRows,
-    setTileSize: TileMateStore.setTileSize,
-    selectTile: TileMateStore.selectTile,
-    copyTile: TileMateStore.replaceTile,
-    swapTiles: TileMateStore.swapTiles,
-    selectMode: TileMateStore.selectMode,
+    addTileset,
+    setColumns,
+    setRows,
+    setTileSize,
+    selectTile,
+    copyTile,
+    swapTiles,
+    selectMode,
+    setShowGrid,
   };
 };
-
-export default TileMateStore;

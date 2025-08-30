@@ -1,25 +1,26 @@
 import { Component, JSX } from "solid-js";
 import staticStyles from "./Input.module.css";
+import { StyledComponentProps } from "../StyledComponent";
 
-type Props = {
+type Props = StyledComponentProps<{
   value: string | number;
-  onInput: JSX.InputHTMLAttributes<HTMLInputElement>["onInput"];
-  type?: "text" | "number";
+  onInput?: JSX.InputHTMLAttributes<HTMLInputElement>["onInput"];
+  type?: "color" | "text" | "number";
   placeholder?: string;
   min?: number;
   max?: number;
-};
+}>;
 
-export const Input: Component<Props> = (props) => {
+export const Input: Component<Props> = ({
+  type = "text",
+  class: className,
+  ...props
+}) => {
   return (
     <input
-      type={props.type || "text"}
-      class={staticStyles.input}
-      value={props.value}
-      onInput={props.onInput}
-      placeholder={props.placeholder}
-      min={props.min}
-      max={props.max}
+      {...props}
+      type={type}
+      class={`${staticStyles.input} ${className}`}
     />
   );
 };

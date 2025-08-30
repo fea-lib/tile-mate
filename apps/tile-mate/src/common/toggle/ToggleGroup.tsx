@@ -1,8 +1,17 @@
-import { Component, JSX, ParentProps } from "solid-js";
+import { Component, ParentProps } from "solid-js";
 import staticStyles from "./ToggleGroup.module.css";
+import { StyledComponentProps } from "../StyledComponent";
 
-type Props = ParentProps<unknown>;
+type Props = ParentProps<StyledComponentProps>;
 
-export const ToggleGroup: Component<Props> = (props) => {
-  return <div class={staticStyles.toggleGroup}>{props.children}</div>;
+export const ToggleGroup: Component<Props> = ({
+  children,
+  class: className,
+  ...props
+}) => {
+  return (
+    <div {...props} class={`${staticStyles.toggleGroup} ${className}`}>
+      {children}
+    </div>
+  );
 };

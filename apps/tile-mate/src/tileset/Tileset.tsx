@@ -1,21 +1,25 @@
 import { For, type Component } from "solid-js";
 import { Tile } from "./Tile";
-import { useTileMateStore } from "../store/TileMateStore";
+import { TileMateStoreState, useTileMateStore } from "../store/TileMateStore";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
 import { Input } from "../common/input/Input";
 
 type Props = {
   tilesetIndex: TilesetIndex;
-  showGrid?: boolean | { color?: string; gap?: number };
 };
 
-export const Tileset: Component<Props> = ({
-  tilesetIndex,
-  showGrid = false,
-}) => {
-  const { columns, rows, setColumns, setRows, setTileSize, tiles, tileSize } =
-    useTileMateStore();
+export const Tileset: Component<Props> = ({ tilesetIndex }) => {
+  const {
+    columns,
+    rows,
+    setColumns,
+    setRows,
+    setTileSize,
+    tiles,
+    tileSize,
+    showGrid,
+  } = useTileMateStore();
 
   const handleTileSizeChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -41,7 +45,7 @@ export const Tileset: Component<Props> = ({
     }
   };
 
-  const grid = toGridOptions(showGrid);
+  const grid = () => toGridOptions(showGrid());
 
   return (
     <div class={staticStyles.tilesetFrame}>
@@ -82,7 +86,7 @@ export const Tileset: Component<Props> = ({
         <div
           class={staticStyles.tileset}
           style={getDynamicStyle({
-            grid,
+            grid: grid(),
             tileSize: tileSize(tilesetIndex),
             columns: columns(tilesetIndex),
             rows: rows(tilesetIndex),
@@ -122,7 +126,7 @@ type GridOptions = {
 
 const defaultGridOptions: GridOptions = { gap: "1px", color: "magenta" };
 
-function toGridOptions(showGrid: Props["showGrid"]): GridOptions {
+function toGridOptions(showGrid: TileMateStoreState["showGrid"]): GridOptions {
   if (!showGrid) return;
 
   const gridOptions = { ...defaultGridOptions };
