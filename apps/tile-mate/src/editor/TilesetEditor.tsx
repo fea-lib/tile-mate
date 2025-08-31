@@ -90,14 +90,14 @@ const Actions: Component = () => {
         <Toggle
           name="show-grid"
           type="checkbox"
-          isChecked={showGrid() === true}
+          isChecked={showGrid() !== false}
           onChange={() => updateGrid(!showGrid())}
         >
           <Show when={showGrid()} fallback="Off">
             On
           </Show>
         </Toggle>
-        <Show when={!!showGrid()}>
+        <Show when={showGrid() !== false}>
           <label>Gap:</label>
           <Input
             type="number"
