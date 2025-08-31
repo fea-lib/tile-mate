@@ -1,0 +1,53 @@
+/* Windows 95 Modal Styling */
+.modal {
+  margin: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 90vw;
+  max-height: 90vh;
+}
+
+/* Remove default backdrop */
+.modal::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.window {
+  background-color: #c0c0c0;
+  border: 2px solid;
+  border-color: #ffffff #000000 #000000 #ffffff;
+  min-width: 300px;
+  min-height: 120px;
+  font-family: "MS Sans Serif", sans-serif;
+  font-size: 11px;
+  box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.titleBar {
+  background: linear-gradient(90deg, #000080 0%, #000040 100%);
+  color: white;
+  padding: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #000000;
+}
+
+.title {
+  margin: 0;
+  padding-left: 4px;
+  font-size: 11px;
+  font-weight: bold;
+  font-family: "MS Sans Serif", sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.content {
+  padding: 8px;
+  background-color: #c0c0c0;
+  color: #000000;
+  min-height: 60px;
+}
