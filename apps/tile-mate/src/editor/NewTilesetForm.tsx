@@ -17,6 +17,16 @@ export const NewTilesetForm: Component<Props> = ({ onCancel, onSubmit }) => {
   const [imageUrl, setImageUrl] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
 
+  // Helper: read the selected file as a persistent data URL so the app
+  // doesn't depend on a temporary blob: URL that might be revoked later.
+  const readFileAsDataURL = (file: File) =>
+    new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = (e) => reject(e);
+      reader.readAsDataURL(file);
+    });
+
   // Cleanup object URL when component unmounts
   onCleanup(() => {
     const url = imageUrl();
@@ -59,9 +69,11 @@ export const NewTilesetForm: Component<Props> = ({ onCancel, onSubmit }) => {
     setIsLoading(true);
 
     try {
-      if (imageUrl()) {
-        // Add tileset with image
-        await addTileset(imageUrl(), tileSize());
+      if (imageFile()) {
+        // Read the file as a data URL to ensure the source remains valid
+        // after the preview blob URL is revoked.
+        const dataUrl = await readFileAsDataURL(imageFile()!);
+        await addTileset(dataUrl, tileSize());
       } else {
         // Add empty tileset with default 5x5 grid
         addEmptyTileset(tileSize(), 5, 5);
