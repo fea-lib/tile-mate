@@ -41,7 +41,10 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
     } else {
       // touch: Only initiate a drag if pressed within the bottom-right handle region
       const rect = draggedElement.getBoundingClientRect();
-      const HANDLE_SIZE = Math.min(18, Math.max(12, Math.floor(rect.width * 0.25)));
+      const HANDLE_SIZE = Math.min(
+        18,
+        Math.max(12, Math.floor(rect.width * 0.25))
+      );
       const withinHandle =
         e.clientX >= rect.right - HANDLE_SIZE &&
         e.clientY >= rect.bottom - HANDLE_SIZE;
@@ -52,7 +55,10 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
       }
 
       // In handle: schedule long-press to initiate drag; allow scroll if user moves away/scrolls
-      dragStartTimer = window.setTimeout(startDrag, LONG_PRESS_MS) as unknown as number;
+      dragStartTimer = window.setTimeout(
+        startDrag,
+        LONG_PRESS_MS
+      ) as unknown as number;
     }
 
     const clearTimer = () => {
