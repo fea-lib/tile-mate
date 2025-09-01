@@ -1,9 +1,11 @@
-import { For, type Component } from "solid-js";
+import { For, createSignal, type Component } from "solid-js";
 import { Tile } from "./Tile";
 import { TileMateStoreState, useTileMateStore } from "../store/TileMateStore";
 import staticStyles from "./Tileset.module.css";
 import { TilesetIndex } from "../types";
 import { Input } from "../common/input/Input";
+import { Button } from "../common/button/Button";
+import { exportTilesetImage, type ExportFormat } from "./exportTilesetImage";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -20,6 +22,9 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
     tileSize,
     showGrid,
   } = useTileMateStore();
+
+  const [format, setFormat] = createSignal<ExportFormat>("png");
+  const [isSaving, setIsSaving] = createSignal(false);
 
   const handleTileSizeChange = (event: Event) => {
     const target = event.target as HTMLInputElement;
@@ -47,11 +52,48 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
 
   const grid = () => toGridOptions(showGrid());
 
+  const handleSave = async () => {
+    if (isSaving()) return;
+    setIsSaving(true);
+    try {
+      await exportTilesetImage({
+        tiles: tiles(tilesetIndex),
+        columns: columns(tilesetIndex),
+        rows: rows(tilesetIndex),
+        tileSize: tileSize(tilesetIndex),
+        format: format(),
+        filename: `tileset-${tilesetIndex}.${
+          format() === "png" ? "png" : "jpg"
+        }`,
+      });
+    } catch (e) {
+      console.error("Failed to save tileset", e);
+      alert("Failed to save tileset image. See console for details.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div class={staticStyles.tilesetFrame}>
       <div class={staticStyles.tilesetHeader}>
         <span class={staticStyles.tilesetTitle}>Tileset {tilesetIndex}</span>
         <div class={staticStyles.tilesetControls}>
+          <div class={staticStyles.controlGroup}>
+            <label>Format:</label>
+            <select
+              onChange={(e) =>
+                setFormat((e.currentTarget.value as ExportFormat) || "png")
+              }
+              value={format()}
+            >
+              <option value="png">PNG</option>
+              <option value="jpeg">JPG</option>
+            </select>
+            <Button onClick={handleSave}>
+              {isSaving() ? "Saving..." : "Save"}
+            </Button>
+          </div>
           <div class={staticStyles.controlGroup}>
             <label>Tile Size:</label>
             <Input
