@@ -124,6 +124,8 @@ export const Tile: Component<Props> = (props) => {
               : ""
           } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
           on:click={() => selectTile([props.tilesetIndex, props.index])}
+          on:contextmenu={(e) => e.preventDefault()}
+          on:dragstart={(e) => e.preventDefault()}
           on:pointerdown={onPointerDown}
         ></span>
       }
@@ -135,6 +137,7 @@ export const Tile: Component<Props> = (props) => {
         })}
         src={tileData.img.src}
         alt={`Tile ${props.index}`}
+        draggable={false}
         data-tile-id={props.index}
         data-tileset-id={props.tilesetIndex}
         data-img={JSON.stringify([tileData.img.x, tileData.img.y])}
@@ -148,6 +151,8 @@ export const Tile: Component<Props> = (props) => {
             : ""
         } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
         on:click={() => selectTile([props.tilesetIndex, props.index])}
+        on:contextmenu={(e) => e.preventDefault()}
+        on:dragstart={(e) => e.preventDefault()}
         on:pointerdown={onPointerDown}
       />
     </Show>

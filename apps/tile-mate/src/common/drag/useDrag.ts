@@ -10,9 +10,14 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
   const dragContext = useDragContext();
 
   const onPointerDown = (e: PointerEvent) => {
+    // Prevent native gestures like text selection or long-press menus
     e.preventDefault();
 
     const draggedElement = e.currentTarget as Element;
+    // Capture pointer so subsequent events are targeted here
+    try {
+      (draggedElement as HTMLElement).setPointerCapture?.(e.pointerId);
+    } catch {}
 
     // Call pickup callback
     onPickUp?.(draggedElement);
@@ -38,6 +43,9 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
       // Clean up listeners
       document.removeEventListener("pointermove", handlePointerMove);
       document.removeEventListener("pointerup", handlePointerUp);
+      try {
+        (draggedElement as HTMLElement).releasePointerCapture?.(e.pointerId);
+      } catch {}
     };
 
     document.addEventListener("pointermove", handlePointerMove);
