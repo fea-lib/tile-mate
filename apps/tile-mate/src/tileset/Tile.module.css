@@ -1,7 +1,6 @@
 .tile {
   object-fit: none;
   /* Improve mobile dragging */
-  touch-action: none; /* we implement our own drag */
   -webkit-touch-callout: none; /* prevent iOS callout */
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0); /* remove tap highlight */
   user-select: none;

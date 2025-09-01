@@ -10,42 +10,89 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
   const dragContext = useDragContext();
 
   const onPointerDown = (e: PointerEvent) => {
-    // Prevent native gestures like text selection or long-press menus
-    e.preventDefault();
+    const draggedElement = e.currentTarget as HTMLElement;
 
-    const draggedElement = e.currentTarget as Element;
-    // Capture pointer so subsequent events are targeted here
-    try {
-      (draggedElement as HTMLElement).setPointerCapture?.(e.pointerId);
-    } catch {}
+    // Track whether we've actually started a drag
+    let dragging = false;
+    let dragStartTimer: number | undefined;
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const pointerId = e.pointerId;
+    const MOVE_THRESHOLD = 6; // px
+    const LONG_PRESS_MS = 200; // touch-only
 
-    // Call pickup callback
-    onPickUp?.(draggedElement);
+    const startDrag = () => {
+      if (dragging) return;
+      dragging = true;
+      // Call pickup callback
+      onPickUp?.(draggedElement);
+      // Start drag in context
+      dragContext.pickUp(draggedElement);
+      // Capture pointer so subsequent events are targeted here
+      try {
+        draggedElement.setPointerCapture?.(pointerId);
+      } catch {}
+    };
 
-    // Start drag in context
-    dragContext.pickUp(draggedElement);
+    // For mouse/pen, start drag immediately; for touch, require a short long-press.
+    if (e.pointerType === "mouse" || e.pointerType === "pen") {
+      e.preventDefault();
+      startDrag();
+    } else {
+      // touch: schedule long-press to initiate drag; allow normal scroll otherwise
+      dragStartTimer = window.setTimeout(
+        startDrag,
+        LONG_PRESS_MS
+      ) as unknown as number;
+    }
 
-    const handlePointerMove = (e: PointerEvent) => {
-      // Find the element under the pointer
-      const hoveringElement = document.elementFromPoint(e.clientX, e.clientY);
+    const clearTimer = () => {
+      if (dragStartTimer !== undefined) {
+        window.clearTimeout(dragStartTimer);
+        dragStartTimer = undefined;
+      }
+    };
+
+    const handlePointerMove = (evt: PointerEvent) => {
+      const dx = Math.abs(evt.clientX - startX);
+      const dy = Math.abs(evt.clientY - startY);
+
+      if (!dragging) {
+        // If the user starts moving before long-press, assume scroll intent; cancel drag.
+        if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) {
+          clearTimer();
+          // Do not start drag; let browser handle scroll.
+          return;
+        }
+        return;
+      }
+
+      // When dragging, prevent native scrolling gestures
+      evt.preventDefault();
+      const hoveringElement = document.elementFromPoint(
+        evt.clientX,
+        evt.clientY
+      );
       dragContext.drag(hoveringElement);
     };
 
     const handlePointerUp = () => {
-      const currentState = dragContext.dragState();
+      clearTimer();
 
-      // Call drop callback with hovering element
-      onDrop?.(currentState.hoveringElement);
-
-      // End drag in context
-      dragContext.drop();
+      if (dragging) {
+        const currentState = dragContext.dragState();
+        // Call drop callback with hovering element
+        onDrop?.(currentState.hoveringElement);
+        // End drag in context
+        dragContext.drop();
+        try {
+          draggedElement.releasePointerCapture?.(pointerId);
+        } catch {}
+      }
 
       // Clean up listeners
       document.removeEventListener("pointermove", handlePointerMove);
       document.removeEventListener("pointerup", handlePointerUp);
-      try {
-        (draggedElement as HTMLElement).releasePointerCapture?.(e.pointerId);
-      } catch {}
     };
 
     document.addEventListener("pointermove", handlePointerMove);
