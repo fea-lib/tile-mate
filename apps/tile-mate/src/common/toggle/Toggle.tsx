@@ -26,6 +26,7 @@ type Props = ParentProps<
 export const Toggle: Component<Props> = ({
   children,
   class: className,
+  isChecked,
   type,
   ...props
 }) => {
@@ -34,7 +35,7 @@ export const Toggle: Component<Props> = ({
       role={type}
       class={`${buttonStyles.button} ${staticStyles.toggle} ${className}`}
     >
-      <input type={type} {...props} />
+      <input type={type} checked={isChecked} {...props} />
       <span>{children}</span>
     </label>
   );

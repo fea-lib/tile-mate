@@ -85,7 +85,7 @@ const Actions: Component = () => {
         </Button>
       </div>
       <div class={staticStyles.actionGroup}>
-        <label>Mode</label>
+        <label>Mode:</label>
         <ToggleGroup>
           {Object.values(DropMode).map((value) => (
             <Toggle
