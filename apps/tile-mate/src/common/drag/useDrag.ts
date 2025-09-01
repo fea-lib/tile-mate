@@ -34,16 +34,25 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
       } catch {}
     };
 
-    // For mouse/pen, start drag immediately; for touch, require a short long-press.
+    // For mouse/pen, start drag immediately anywhere; for touch, restrict to handle area + short long-press.
     if (e.pointerType === "mouse" || e.pointerType === "pen") {
       e.preventDefault();
       startDrag();
     } else {
-      // touch: schedule long-press to initiate drag; allow normal scroll otherwise
-      dragStartTimer = window.setTimeout(
-        startDrag,
-        LONG_PRESS_MS
-      ) as unknown as number;
+      // touch: Only initiate a drag if pressed within the bottom-right handle region
+      const rect = draggedElement.getBoundingClientRect();
+      const HANDLE_SIZE = Math.min(18, Math.max(12, Math.floor(rect.width * 0.25)));
+      const withinHandle =
+        e.clientX >= rect.right - HANDLE_SIZE &&
+        e.clientY >= rect.bottom - HANDLE_SIZE;
+
+      if (!withinHandle) {
+        // Not in handle; let scroll happen
+        return;
+      }
+
+      // In handle: schedule long-press to initiate drag; allow scroll if user moves away/scrolls
+      dragStartTimer = window.setTimeout(startDrag, LONG_PRESS_MS) as unknown as number;
     }
 
     const clearTimer = () => {
