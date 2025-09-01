@@ -1,0 +1,38 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.field label {
+  font-weight: bold;
+  font-size: 11px;
+}
+
+.fileInput {
+  padding: 4px;
+  border: 1px solid #808080;
+  background-color: white;
+  font-family: "MS Sans Serif", sans-serif;
+  font-size: 11px;
+}
+
+.preview {
+  max-width: 200px;
+  max-height: 150px;
+  border: 1px solid #808080;
+  object-fit: contain;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 8px;
+}

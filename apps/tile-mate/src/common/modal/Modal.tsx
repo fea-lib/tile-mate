@@ -20,8 +20,6 @@ type Props = ParentProps<
   }>
 >;
 
-type ComponentPropsOf<C> = C extends Component<infer P> ? P : never;
-
 export const Modal: Component<Props> = ({
   children,
   title,
@@ -89,13 +87,14 @@ export const Modal: Component<Props> = ({
   );
 };
 
-export const showModal = <C extends Component<Props & Record<string, any>>>(
-  options: {
-    component?: C;
-  } & Omit<ComponentPropsOf<C>, "isOpen" | "children"> & {
-      children?: () => JSX.Element;
-    }
-): (() => void) => {
+export const showModal = ({
+  onClose,
+  ...props
+}: Omit<Props, "isOpen" | "children"> & {
+  children?: JSX.Element | (() => JSX.Element);
+}): (() => void) => {
+  // Capture the current owner to preserve reactive context
+  const owner = getOwner();
   let dispose: (() => void) | undefined;
 
   const container = document.createElement("div");
@@ -110,23 +109,16 @@ export const showModal = <C extends Component<Props & Record<string, any>>>(
   };
 
   dispose = render(() => {
-    const { component, children, onClose, ...rest } = options as unknown as {
-      component?: C;
-      children?: () => JSX.Element;
-      onClose?: () => void;
-    } & Omit<ComponentPropsOf<C>, "isOpen" | "children">;
-
     // Evaluate children lazily under this render's owner to avoid creating
     // computations outside a root (e.g., when called from event handlers)
     const evaluatedChildren =
-      typeof children === "function" ? children() : undefined;
-
-    const ModalComponent = (component ??
-      (Modal as unknown as C)) as unknown as Component<any>;
+      typeof props.children === "function"
+        ? (props.children as () => JSX.Element)()
+        : props.children;
 
     return (
-      <ModalComponent
-        {...(rest as any)}
+      <Modal
+        {...props}
         isOpen
         onClose={() => {
           close();
@@ -134,7 +126,7 @@ export const showModal = <C extends Component<Props & Record<string, any>>>(
         }}
       >
         {evaluatedChildren}
-      </ModalComponent>
+      </Modal>
     );
   }, container);
 

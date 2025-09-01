@@ -8,6 +8,7 @@ import { Button } from "../common/button/Button";
 import staticStyles from "./TilesetEditor.module.css";
 import { Input } from "../common/input/Input";
 import { showModal } from "../common/modal/Modal";
+import { NewTilesetForm } from "./NewTilesetForm";
 
 export const TilesetEditor: Component = () => {
   const { tilesets } = useTileMateStore();
@@ -68,19 +69,16 @@ const Actions: Component = () => {
       <div class={staticStyles.actionGroup}>
         <Button
           onClick={() => {
-            showModal({
+            const close = showModal({
               title: "New Tileset",
-              onClose: () => {
-                console.error("Modal closed");
-              },
-              // Provide children as a factory so it is evaluated within render
               children: () => (
-                <div>
-                  <label>Tileset Name:</label>
-                  <Input type="text" value="" />
-                </div>
+                <NewTilesetForm onSubmit={onDone} onCancel={onDone} />
               ),
             });
+
+            function onDone() {
+              close();
+            }
           }}
         >
           New Tileset

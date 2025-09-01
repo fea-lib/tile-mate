@@ -158,6 +158,27 @@ export const addTileset = (
   });
 };
 
+export const addEmptyTileset = (
+  tileSize: number,
+  columns: number = 5,
+  rows: number = 5
+): TilesetIndex => {
+  const tilesetIndex = store.tilesets.length;
+
+  const newTileset: Tileset = {
+    index: tilesetIndex,
+    tiles: createTiles(rows, columns),
+    tileSize,
+    columns,
+    rows,
+    // No image property for empty tilesets
+  };
+
+  setStore("tilesets", tilesetIndex, newTileset);
+
+  return tilesetIndex;
+};
+
 // Additional tileset management functions
 export const hasImage = (tilesetIndex: TilesetIndex): boolean => {
   return !!store.tilesets[tilesetIndex]?.image;
@@ -347,6 +368,7 @@ export const useTileMateStore = () => {
 
     // Commands
     addTileset,
+    addEmptyTileset,
     setColumns,
     setRows,
     setTileSize,
