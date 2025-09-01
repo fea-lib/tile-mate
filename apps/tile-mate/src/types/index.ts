@@ -9,12 +9,16 @@ export type TileIndex = number;
 export type Tile =
   | {
       index: TileIndex;
-      imgX: number;
-      imgY: number;
+      img: {
+        src: string;
+        x: number;
+        y: number;
+      };
     }
   | {
       // Empty Tile
       index: TileIndex;
+      img: never;
     };
 
 export type TilesetIndex = number;

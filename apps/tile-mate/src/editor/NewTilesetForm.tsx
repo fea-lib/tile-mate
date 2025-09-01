@@ -14,7 +14,7 @@ export const NewTilesetForm: Component<Props> = ({ onCancel, onSubmit }) => {
 
   const [tileSize, setTileSize] = createSignal(16);
   const [imageFile, setImageFile] = createSignal<File | null>(null);
-  const [imageUrl, setImageUrl] = createSignal<string>("");
+  const [imageUrl, setImageUrl] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
 
   // Cleanup object URL when component unmounts
@@ -87,7 +87,7 @@ export const NewTilesetForm: Component<Props> = ({ onCancel, onSubmit }) => {
 
     setTileSize(16);
     setImageFile(null);
-    setImageUrl("");
+    setImageUrl(null);
     setIsLoading(false);
 
     // Clear file input

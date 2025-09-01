@@ -48,7 +48,39 @@ export const isSelectedTile = (selectedTile: SelectedTile): boolean => {
   );
 };
 
+// Additional tileset management functions
+export const hasImage = (tilesetIndex: TilesetIndex): boolean => {
+  return !!store.tilesets[tilesetIndex]?.image;
+};
+
+export const isImageLoading = (tilesetIndex: TilesetIndex): boolean => {
+  return store.tilesets[tilesetIndex]?.image?.isLoading ?? false;
+};
+
+export const columns = (tilesetIndex: TilesetIndex): number => {
+  return store.tilesets[tilesetIndex]?.columns ?? 0;
+};
+
+export const rows = (tilesetIndex: TilesetIndex): number => {
+  return store.tilesets[tilesetIndex]?.rows ?? 0;
+};
+
+export const tilesetImage = (
+  tilesetIndex: TilesetIndex
+): string | undefined => {
+  return store.tilesets[tilesetIndex]?.image?.url;
+};
+
+export const tileSize = (tilesetIndex: TilesetIndex): number => {
+  return store.tilesets[tilesetIndex]?.tileSize ?? 32;
+};
+
+export const tiles = (tilesetIndex: TilesetIndex): Tile[] => {
+  return store.tilesets[tilesetIndex]?.tiles ?? [];
+};
+
 function createTiles(
+  tilesetIndex: number,
   newRows: number,
   newColumns: number,
   existingTiles?: Tile[],
@@ -60,6 +92,8 @@ function createTiles(
   const haveTilesExisted =
     existingTiles && existingTiles.length > 0 && oldColumns && oldRows;
 
+  const tilesetImageSrc = tilesetImage(tilesetIndex);
+
   // Create new grid
   for (let y = 0; y < newRows; y++) {
     for (let x = 0; x < newColumns; x++) {
@@ -68,8 +102,13 @@ function createTiles(
       if (!haveTilesExisted) {
         newTiles.push({
           index: newIndex,
-          imgX: x,
-          imgY: y,
+          img: tilesetImageSrc
+            ? {
+                src: tilesetImageSrc,
+                x,
+                y,
+              }
+            : undefined,
         });
 
         continue;
@@ -124,6 +163,8 @@ export const addTileset = (
       },
     };
 
+    console.log("addTileset", initialTilesetState);
+
     setStore("tilesets", tilesetIndex, initialTilesetState);
 
     // Load image and calculate tiles
@@ -135,7 +176,7 @@ export const addTileset = (
 
       setStore("tilesets", tilesetIndex, {
         index: tilesetIndex,
-        tiles: createTiles(calculatedRows, calculatedColumns),
+        tiles: createTiles(tilesetIndex, calculatedRows, calculatedColumns),
         tileSize,
         columns: calculatedColumns,
         rows: calculatedRows,
@@ -167,47 +208,18 @@ export const addEmptyTileset = (
 
   const newTileset: Tileset = {
     index: tilesetIndex,
-    tiles: createTiles(rows, columns),
+    tiles: createTiles(tilesetIndex, rows, columns),
     tileSize,
     columns,
     rows,
     // No image property for empty tilesets
   };
 
+  console.log("addEmptyTileset", newTileset);
+
   setStore("tilesets", tilesetIndex, newTileset);
 
   return tilesetIndex;
-};
-
-// Additional tileset management functions
-export const hasImage = (tilesetIndex: TilesetIndex): boolean => {
-  return !!store.tilesets[tilesetIndex]?.image;
-};
-
-export const isImageLoading = (tilesetIndex: TilesetIndex): boolean => {
-  return store.tilesets[tilesetIndex]?.image?.isLoading ?? false;
-};
-
-export const columns = (tilesetIndex: TilesetIndex): number => {
-  return store.tilesets[tilesetIndex]?.columns ?? 0;
-};
-
-export const rows = (tilesetIndex: TilesetIndex): number => {
-  return store.tilesets[tilesetIndex]?.rows ?? 0;
-};
-
-export const tilesetImage = (
-  tilesetIndex: TilesetIndex
-): string | undefined => {
-  return store.tilesets[tilesetIndex]?.image?.url;
-};
-
-export const tileSize = (tilesetIndex: TilesetIndex): number => {
-  return store.tilesets[tilesetIndex]?.tileSize ?? 32;
-};
-
-export const tiles = (tilesetIndex: TilesetIndex): Tile[] => {
-  return store.tilesets[tilesetIndex]?.tiles ?? [];
 };
 
 export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
@@ -223,7 +235,14 @@ export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
         "tilesets",
         tilesetIndex,
         "tiles",
-        createTiles(oldRows, newColumns, existingTiles, oldColumns, oldRows)
+        createTiles(
+          tilesetIndex,
+          oldRows,
+          newColumns,
+          existingTiles,
+          oldColumns,
+          oldRows
+        )
       );
     }
   });
@@ -242,7 +261,14 @@ export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
         "tilesets",
         tilesetIndex,
         "tiles",
-        createTiles(newRows, oldColumns, existingTiles, oldColumns, oldRows)
+        createTiles(
+          tilesetIndex,
+          newRows,
+          oldColumns,
+          existingTiles,
+          oldColumns,
+          oldRows
+        )
       );
     }
   });
@@ -271,7 +297,7 @@ export const setTileSize = (
         "tilesets",
         tilesetIndex,
         "tiles",
-        createTiles(newRows, newColumns)
+        createTiles(tilesetIndex, newRows, newColumns)
       );
     }
   });
@@ -296,6 +322,12 @@ export const copyTile = (
       ...sourceTile,
       index: targetIndex,
     };
+
+    console.log("copyTile", {
+      target: [targetTilesetIndex, targetIndex],
+      copiedTile,
+      sourceTile,
+    });
 
     setStore("tilesets", targetTilesetIndex, "tiles", targetIndex, copiedTile);
     setStore("selectedTile", [targetTilesetIndex, targetIndex]);
