@@ -7,25 +7,55 @@
   -webkit-user-select: none;
   -ms-user-select: none;
   position: relative; /* anchor for handle */
+  /* Allow all gestures by default - JS will take control during drag */
+  touch-action: auto;
+  /* Smooth transitions for drag feedback */
+  transition: transform 0.1s ease, filter 0.1s ease;
 }
 
-/* Small corner grip used as a touch drag handle */
+/* Small corner grip as visual indicator (decorative only) */
 .tile::after {
   content: "";
   position: absolute;
   right: 2px;
   bottom: 2px;
-  width: 12px;
-  height: 12px;
+  width: 10px; /* Smaller since it's just visual */
+  height: 10px;
   background: repeating-linear-gradient(
     45deg,
-    rgba(0, 0, 0, 0.35),
-    rgba(0, 0, 0, 0.35) 2px,
-    rgba(255, 255, 255, 0.35) 2px,
-    rgba(255, 255, 255, 0.35) 4px
+    rgba(0, 0, 0, 0.3),
+    /* More subtle */ rgba(0, 0, 0, 0.3) 2px,
+    rgba(255, 255, 255, 0.4) 2px,
+    rgba(255, 255, 255, 0.4) 4px
   );
   border-radius: 2px;
-  pointer-events: none; /* events go to tile; we detect region in JS */
+  pointer-events: none; /* events go to tile */
+  /* Subtle animation to indicate interactivity */
+  transition: opacity 0.2s ease;
+  opacity: 0.6;
+}
+
+/* Make handle slightly more visible on hover/active for non-touch devices */
+@media (hover: hover) {
+  .tile:hover::after {
+    opacity: 0.8;
+  }
+}
+
+/* Keep handle visible but smaller on touch devices since entire tile is draggable */
+@media (hover: none) {
+  .tile::after {
+    opacity: 0.7;
+    width: 8px;
+    height: 8px;
+  }
+}
+
+.dragging {
+  transform: scale(1.05) rotate(2deg);
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+  z-index: 1000;
+  transition: none; /* Disable transitions during drag for immediate feedback */
 }
 
 .selected {

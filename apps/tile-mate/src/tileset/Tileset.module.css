@@ -51,6 +51,8 @@
   background-color: #ffffff;
   flex: 1;
   overflow: auto;
+  /* Allow vertical scrolling but enable custom horizontal drag gestures */
+  touch-action: pan-y pinch-zoom;
 }
 
 .tileset {
@@ -61,4 +63,6 @@
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
   user-select: none;
   -webkit-user-select: none;
+  /* Allow scrolling by default, but tiles will override with touch-action: none */
+  touch-action: pan-x pan-y pinch-zoom;
 }
