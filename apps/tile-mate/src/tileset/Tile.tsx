@@ -25,79 +25,39 @@ export const Tile: Component<Props> = (props) => {
       selectTile([props.tilesetIndex, props.index]);
     },
     onDrop: (hoveringElement) => {
-      console.log("🎯 Drop callback called with:", {
-        hoveringElement,
-        tagName: hoveringElement?.tagName,
-        dataset: (hoveringElement as HTMLElement)?.dataset,
-      });
-
       if (hoveringElement) {
-        // The hoveringElement should already be a tile element, but let's verify
-        let tileElement: HTMLElement;
+        const tileElement: HTMLElement | undefined =
+          hoveringElement.closest("[data-tile-id]");
 
-        if (hoveringElement.hasAttribute("data-tile-id")) {
-          // hoveringElement is already a tile element
-          tileElement = hoveringElement as HTMLElement;
-          console.log("🎯 Using hoveringElement directly as tile");
-        } else {
-          // fallback: look for closest tile element
-          const found = hoveringElement.closest(
-            "[data-tile-id]"
-          ) as HTMLElement;
-          if (!found) {
-            console.log("❌ No tile element found");
-            return;
-          }
-          tileElement = found;
-          console.log("🎯 Found tile element via closest()");
-        }
-
-        console.log("🎯 Target tile element:", {
-          tileElement,
-          dataset: tileElement.dataset,
-        });
-
-        const targetId = parseInt(tileElement.dataset.tileId || "0");
-        const targetTilesetIndex = parseInt(
-          tileElement.dataset.tilesetId || "0"
-        );
-        const mode = selectedMode();
-
-        console.log("🎯 Processing drop:", {
-          mode,
-          source: [props.tilesetIndex, props.index],
-          target: [targetTilesetIndex, targetId],
-        });
-
-        // Don't do anything if source and target are the same tile in the same tileset
-        if (
-          props.index !== targetId ||
-          props.tilesetIndex !== targetTilesetIndex
-        ) {
-          console.log("🎯 Executing drop operation...");
-          if (mode === DropMode.Copy) {
-            copyTile(
-              props.tilesetIndex,
-              props.index,
-              targetTilesetIndex,
-              targetId
-            );
-          } else if (mode === DropMode.Swap) {
-            swapTiles(
-              props.tilesetIndex,
-              props.index,
-              targetTilesetIndex,
-              targetId
-            );
-          }
-          console.log("✅ Drop operation completed");
-        } else {
-          console.log(
-            "🚫 Source and target are the same tile - no operation needed"
+        if (tileElement) {
+          const targetId = parseInt(tileElement.dataset.tileId || "0");
+          const targetTilesetIndex = parseInt(
+            tileElement.dataset.tilesetId || "0"
           );
+          const mode = selectedMode();
+
+          // Don't do anything if source and target are the same tile in the same tileset
+          if (
+            props.index !== targetId ||
+            props.tilesetIndex !== targetTilesetIndex
+          ) {
+            if (mode === DropMode.Copy) {
+              copyTile(
+                props.tilesetIndex,
+                props.index,
+                targetTilesetIndex,
+                targetId
+              );
+            } else if (mode === DropMode.Swap) {
+              swapTiles(
+                props.tilesetIndex,
+                props.index,
+                targetTilesetIndex,
+                targetId
+              );
+            }
+          }
         }
-      } else {
-        console.log("❌ No hovering element provided to drop handler");
       }
     },
   });
@@ -137,6 +97,7 @@ export const Tile: Component<Props> = (props) => {
   const isDraggingThisTile = () => {
     const drag = dragState();
     const element = drag.draggedElement as HTMLElement;
+
     return (
       drag.isDragging &&
       element &&
@@ -168,8 +129,6 @@ export const Tile: Component<Props> = (props) => {
             isDraggingThisTile() ? staticStyles.dragging : ""
           }`}
           on:click={() => selectTile([props.tilesetIndex, props.index])}
-          on:contextmenu={(e) => e.preventDefault()}
-          on:dragstart={(e) => e.preventDefault()}
           on:pointerdown={onPointerDown}
         ></span>
       }
@@ -181,7 +140,6 @@ export const Tile: Component<Props> = (props) => {
         })}
         src={tileData.img.src}
         alt={`Tile ${props.index}`}
-        draggable={false}
         data-tile-id={props.index}
         data-tileset-id={props.tilesetIndex}
         data-img={JSON.stringify([tileData.img.x, tileData.img.y])}
@@ -193,12 +151,8 @@ export const Tile: Component<Props> = (props) => {
           isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
             ? staticStyles.selected
             : ""
-        } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
-          isDraggingThisTile() ? staticStyles.dragging : ""
-        }`}
+        } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
         on:click={() => selectTile([props.tilesetIndex, props.index])}
-        on:contextmenu={(e) => e.preventDefault()}
-        on:dragstart={(e) => e.preventDefault()}
         on:pointerdown={onPointerDown}
       />
     </Show>

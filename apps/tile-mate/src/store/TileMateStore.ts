@@ -163,8 +163,6 @@ export const addTileset = (
       },
     };
 
-    console.log("addTileset", initialTilesetState);
-
     setStore("tilesets", tilesetIndex, initialTilesetState);
 
     // Load image and calculate tiles
@@ -214,8 +212,6 @@ export const addEmptyTileset = (
     rows,
     // No image property for empty tilesets
   };
-
-  console.log("addEmptyTileset", newTileset);
 
   setStore("tilesets", tilesetIndex, newTileset);
 
@@ -322,12 +318,6 @@ export const copyTile = (
       ...sourceTile,
       index: targetIndex,
     };
-
-    console.log("copyTile", {
-      target: [targetTilesetIndex, targetIndex],
-      copiedTile,
-      sourceTile,
-    });
 
     setStore("tilesets", targetTilesetIndex, "tiles", targetIndex, copiedTile);
     setStore("selectedTile", [targetTilesetIndex, targetIndex]);
