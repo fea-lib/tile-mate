@@ -1,5 +1,5 @@
 import { Show, type Component } from "solid-js";
-import { useDragAndDrop } from "../common/drag/useDrag";
+import { useDragAndDrop } from "./drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
 import { useTileMateStore } from "../store/TileMateStore";

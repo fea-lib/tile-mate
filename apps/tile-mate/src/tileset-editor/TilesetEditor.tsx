@@ -1,5 +1,5 @@
-import { type Component, onMount, For, Show } from "solid-js";
-import { Tileset } from "../tileset/Tileset";
+import { type Component, For, Show } from "solid-js";
+import { Tileset } from "./Tileset";
 import { Toggle } from "../common/toggle/Toggle";
 import { ToggleGroup } from "../common/toggle/ToggleGroup";
 import { DropMode } from "../types";
@@ -9,19 +9,22 @@ import staticStyles from "./TilesetEditor.module.css";
 import { Input } from "../common/input/Input";
 import { showModal } from "../common/modal/Modal";
 import { NewTilesetForm } from "./NewTilesetForm";
+import { DragContextProvider } from "./drag/DragContext";
 
 export const TilesetEditor: Component = () => {
   const { tilesets } = useTileMateStore();
 
   return (
-    <div class={staticStyles.tilesetEditor}>
-      <Actions />
-      <div class={staticStyles.tilesets}>
-        <For each={tilesets()}>
-          {(tileset) => <Tileset tilesetIndex={tileset.index} />}
-        </For>
+    <DragContextProvider>
+      <div class={staticStyles.tilesetEditor}>
+        <Actions />
+        <div class={staticStyles.tilesets}>
+          <For each={tilesets()}>
+            {(tileset) => <Tileset tilesetIndex={tileset.index} />}
+          </For>
+        </div>
       </div>
-    </div>
+    </DragContextProvider>
   );
 };
 
