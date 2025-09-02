@@ -5,6 +5,16 @@ type DragCallbacks = {
   onDrop?: (hoveringElement: Element | null) => void;
 };
 
+// Utility function to detect touch devices
+const isTouchDevice = () => {
+  return (
+    "ontouchstart" in window ||
+    navigator.maxTouchPoints > 0 ||
+    // @ts-ignore - for older browsers
+    navigator.msMaxTouchPoints > 0
+  );
+};
+
 export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
   const { onPickUp, onDrop } = callbacks;
   const dragContext = useDragContext();
@@ -13,39 +23,89 @@ export const useDragAndDrop = (callbacks: DragCallbacks = {}) => {
     e.preventDefault();
 
     const draggedElement = e.currentTarget as Element;
+    const isTouch = isTouchDevice();
 
-    // Call pickup callback
-    onPickUp?.(draggedElement);
+    if (isTouch) {
+      // Touch device logic
+      let longPressTimer: number;
+      let hasLongPressed = false;
 
-    // Start drag in context
-    dragContext.pickUp(draggedElement);
+      // Disable context menu for touch
+      const preventContextMenu = (e: Event) => {
+        e.preventDefault();
+      };
 
-    const handlePointerMove = (e: PointerEvent) => {
-      // Find the element under the pointer
-      const hoveringElement = document.elementFromPoint(e.clientX, e.clientY);
-      dragContext.drag(hoveringElement);
-    };
+      draggedElement.addEventListener("contextmenu", preventContextMenu);
 
-    const handlePointerUp = () => {
-      const currentState = dragContext.dragState();
+      // Start long press timer
+      longPressTimer = setTimeout(() => {
+        hasLongPressed = true;
+        onPickUp?.(draggedElement);
+        dragContext.pickUp(draggedElement);
+      }, 500); // 500ms long press threshold
 
-      // Call drop callback with hovering element
-      onDrop?.(currentState.hoveringElement);
+      const handlePointerUp = () => {
+        clearTimeout(longPressTimer);
+        draggedElement.removeEventListener("contextmenu", preventContextMenu);
 
-      // End drag in context
-      dragContext.drop();
+        // Clean up listeners
+        document.removeEventListener("pointerup", handlePointerUp);
+        document.removeEventListener("pointermove", handlePointerMove);
+      };
 
-      // Clean up listeners
-      document.removeEventListener("pointermove", handlePointerMove);
-      document.removeEventListener("pointerup", handlePointerUp);
-    };
+      const handlePointerMove = () => {
+        // Cancel long press if user moves finger
+        clearTimeout(longPressTimer);
+        hasLongPressed = false;
+        document.removeEventListener("pointermove", handlePointerMove);
+      };
 
-    document.addEventListener("pointermove", handlePointerMove);
-    document.addEventListener("pointerup", handlePointerUp);
+      document.addEventListener("pointerup", handlePointerUp);
+      document.addEventListener("pointermove", handlePointerMove);
+    } else {
+      // Desktop logic - existing drag behavior
+      onPickUp?.(draggedElement);
+      dragContext.pickUp(draggedElement);
+
+      const handlePointerMove = (e: PointerEvent) => {
+        const hoveringElement = document.elementFromPoint(e.clientX, e.clientY);
+        dragContext.drag(hoveringElement);
+      };
+
+      const handlePointerUp = () => {
+        const currentState = dragContext.dragState();
+        onDrop?.(currentState.hoveringElement);
+        dragContext.drop();
+
+        // Clean up listeners
+        document.removeEventListener("pointermove", handlePointerMove);
+        document.removeEventListener("pointerup", handlePointerUp);
+      };
+
+      document.addEventListener("pointermove", handlePointerMove);
+      document.addEventListener("pointerup", handlePointerUp);
+    }
+  };
+
+  const onTouchClick = (e: PointerEvent) => {
+    const currentState = dragContext.dragState();
+
+    if (currentState.isDragging) {
+      const targetElement = e.currentTarget as Element;
+      const draggedElement = currentState.draggedElement;
+
+      // Only execute drop if this is NOT the dragged element
+      if (targetElement !== draggedElement) {
+        e.preventDefault();
+        onDrop?.(targetElement);
+        dragContext.drop();
+      }
+    }
   };
 
   return {
     onPointerDown,
+    onTouchClick,
     dragState: dragContext.dragState,
   };
 };

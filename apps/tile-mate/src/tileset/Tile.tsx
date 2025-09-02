@@ -20,7 +20,7 @@ export const Tile: Component<Props> = (props) => {
     swapTiles,
   } = useTileMateStore();
 
-  const { onPointerDown, dragState } = useDragAndDrop({
+  const { onPointerDown, onTouchClick, dragState } = useDragAndDrop({
     onPickUp: () => {
       selectTile([props.tilesetIndex, props.index]);
     },
@@ -34,24 +34,33 @@ export const Tile: Component<Props> = (props) => {
           const targetTilesetIndex = parseInt(
             tileElement.dataset.tilesetId || "0"
           );
+
+          // Get source from the actual dragged element, not current tile props
+          const currentState = dragState();
+          const draggedElement = currentState.draggedElement as HTMLElement;
+          const sourceIndex = parseInt(draggedElement?.dataset.tileId || "0");
+          const sourceTilesetIndex = parseInt(
+            draggedElement?.dataset.tilesetId || "0"
+          );
+
           const mode = selectedMode();
 
           // Don't do anything if source and target are the same tile in the same tileset
           if (
-            props.index !== targetId ||
-            props.tilesetIndex !== targetTilesetIndex
+            sourceIndex !== targetId ||
+            sourceTilesetIndex !== targetTilesetIndex
           ) {
             if (mode === DropMode.Copy) {
               copyTile(
-                props.tilesetIndex,
-                props.index,
+                sourceTilesetIndex,
+                sourceIndex,
                 targetTilesetIndex,
                 targetId
               );
             } else if (mode === DropMode.Swap) {
               swapTiles(
-                props.tilesetIndex,
-                props.index,
+                sourceTilesetIndex,
+                sourceIndex,
                 targetTilesetIndex,
                 targetId
               );
@@ -130,6 +139,7 @@ export const Tile: Component<Props> = (props) => {
           }`}
           on:click={() => selectTile([props.tilesetIndex, props.index])}
           on:pointerdown={onPointerDown}
+          on:pointerup={onTouchClick}
         ></span>
       }
     >
@@ -156,6 +166,7 @@ export const Tile: Component<Props> = (props) => {
         }`}
         on:click={() => selectTile([props.tilesetIndex, props.index])}
         on:pointerdown={onPointerDown}
+        on:pointerup={onTouchClick}
       />
     </Show>
   );
