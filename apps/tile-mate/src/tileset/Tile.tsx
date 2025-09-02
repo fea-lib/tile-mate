@@ -94,7 +94,7 @@ export const Tile: Component<Props> = (props) => {
     );
   };
 
-  const isDraggingThisTile = () => {
+  const isDragging = () => {
     const drag = dragState();
     const element = drag.draggedElement as HTMLElement;
 
@@ -126,7 +126,7 @@ export const Tile: Component<Props> = (props) => {
               ? staticStyles.selected
               : ""
           } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
-            isDraggingThisTile() ? staticStyles.dragging : ""
+            isDragging() ? staticStyles.dragging : ""
           }`}
           on:click={() => selectTile([props.tilesetIndex, props.index])}
           on:pointerdown={onPointerDown}
@@ -151,7 +151,9 @@ export const Tile: Component<Props> = (props) => {
           isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
             ? staticStyles.selected
             : ""
-        } ${isDragTarget() ? staticStyles.dragTarget : ""}`}
+        } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
+          isDragging() ? staticStyles.dragging : ""
+        }`}
         on:click={() => selectTile([props.tilesetIndex, props.index])}
         on:pointerdown={onPointerDown}
       />
