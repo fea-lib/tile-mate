@@ -24,7 +24,7 @@ Try TileMate right now without any installation:
 ### Prerequisites
 
 - Node.js (18+)
-- pnpm
+- npm
 
 ### Installation
 
@@ -37,12 +37,12 @@ cd tile-mate
 2. Install dependencies:
 ```bash
 cd apps/tile-mate
-pnpm install
+npm install
 ```
 
 3. Start the development server:
 ```bash
-pnpm run dev
+npm run dev
 ```
 
 4. Open your browser and navigate to the URL shown in the terminal (typically `http://localhost:5173`)
@@ -51,21 +51,21 @@ pnpm run dev
 
 ### TileMate App (`apps/tile-mate`)
 
-| Script  | Command          | Description                              |
-| ------- | ---------------- | ---------------------------------------- |
-| `start` | `pnpm start`     | Start development server (alias for dev) |
-| `dev`   | `pnpm run dev`   | Start development server with hot reload |
-| `build` | `pnpm run build` | Build the app for production             |
-| `serve` | `pnpm run serve` | Preview the production build locally     |
+| Script  | Command         | Description                              |
+| ------- | --------------- | ---------------------------------------- |
+| `start` | `npm start`     | Start development server (alias for dev) |
+| `dev`   | `npm run dev`   | Start development server with hot reload |
+| `build` | `npm run build` | Build the app for production             |
+| `serve` | `npm run serve` | Preview the production build locally     |
 
 ### Documentation (`apps/docs`)
 
-| Script    | Command            | Description                        |
-| --------- | ------------------ | ---------------------------------- |
-| `dev`     | `pnpm run dev`     | Start Astro development server     |
-| `build`   | `pnpm run build`   | Build documentation for production |
-| `preview` | `pnpm run preview` | Preview the built documentation    |
-| `test`    | `pnpm run test`    | Run tests with Vitest              |
+| Script    | Command           | Description                        |
+| --------- | ----------------- | ---------------------------------- |
+| `dev`     | `npm run dev`     | Start Astro development server     |
+| `build`   | `npm run build`   | Build documentation for production |
+| `preview` | `npm run preview` | Preview the built documentation    |
+| `test`    | `npm run test`    | Run tests with Vitest              |
 
 ## 🏗️ Project Structure
 
@@ -103,7 +103,7 @@ tile-mate/
 - **Build Tool**: Vite
 - **Styling**: CSS Modules, Tailwind CSS
 - **Documentation**: Astro, MDX
-- **Package Manager**: pnpm
+- **Package Manager**: npm
 
 ## 🎨 Design Philosophy
 
