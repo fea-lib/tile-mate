@@ -1,4 +1,4 @@
-import { Component, JSX } from "solid-js";
+import { Component, JSX, splitProps } from "solid-js";
 import staticStyles from "./Input.module.css";
 import { StyledComponentProps } from "../StyledComponent";
 
@@ -11,16 +11,15 @@ type Props = StyledComponentProps<{
   max?: number;
 }>;
 
-export const Input: Component<Props> = ({
-  type = "text",
-  class: className,
-  ...props
-}) => {
+export const Input: Component<Props> = (allProps) => {
+  // Avoid destructuring props directly to preserve reactivity in Solid
+  const [local, others] = splitProps(allProps, ["type", "class"]);
+
   return (
     <input
-      {...props}
-      type={type}
-      class={`${staticStyles.input} ${className}`}
+      {...others}
+      type={local.type ?? "text"}
+      class={`${staticStyles.input} ${local.class ?? ""}`}
     />
   );
 };
