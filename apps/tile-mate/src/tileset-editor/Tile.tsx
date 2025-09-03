@@ -1,8 +1,11 @@
-import { Show, type Component } from "solid-js";
+import { type Component, JSX, splitProps, Switch, Match, Show } from "solid-js";
 import { useDragAndDrop } from "./drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
 import { useTileMateStore } from "../store/TileMateStore";
+import { showModal } from "../common/modal/Modal";
+import { TileEditForm } from "./TileEditForm";
+import { StyledComponentProps } from "../common/StyledComponent";
 
 type Props = {
   tilesetIndex: TilesetIndex;
@@ -18,12 +21,10 @@ export const Tile: Component<Props> = (props) => {
     tileSize,
     copyTile,
     swapTiles,
+    setTileTint,
   } = useTileMateStore();
 
   const { onPointerDown, onTouchClick, dragState } = useDragAndDrop({
-    onPickUp: () => {
-      selectTile([props.tilesetIndex, props.index]);
-    },
     onDrop: (hoveringElement) => {
       if (hoveringElement) {
         const tileElement: HTMLElement | undefined =
@@ -115,81 +116,113 @@ export const Tile: Component<Props> = (props) => {
     );
   };
 
-  const tileData = tile(props.tilesetIndex, props.index);
+  const img = () => tile(props.tilesetIndex, props.index).img;
+  const tint = () => tile(props.tilesetIndex, props.index).tint;
+
+  const handleDoubleClick = () => {
+    if (!img()) return;
+
+    const close = showModal({
+      title: "Tint Tile",
+      children: () => (
+        <TileEditForm
+          tilesetIndex={props.tilesetIndex}
+          tileIndex={props.index}
+          initialTint={tint()}
+          onAccept={(tint) => {
+            setTileTint(props.tilesetIndex, props.index, tint);
+            close();
+          }}
+          onCancel={() => {
+            close();
+          }}
+        />
+      ),
+    });
+  };
 
   return (
-    <Show
-      when={!!tileData && tileData.img}
-      fallback={
-        <span
-          title={JSON.stringify({
-            coords: [props.tilesetIndex, props.index],
-            data: tileData,
-          })}
-          data-tile-id={props.index}
-          data-tileset-id={props.tilesetIndex}
-          data-img="none"
-          style={getDynamicStyles({ size: tileSize(props.tilesetIndex) })}
-          class={`${staticStyles.tile} ${
-            isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
-              ? staticStyles.selected
-              : ""
-          } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
-            isDragging() ? staticStyles.dragging : ""
-          }`}
-          on:click={() => selectTile([props.tilesetIndex, props.index])}
-          on:pointerdown={onPointerDown}
-          on:pointerup={onTouchClick}
-        ></span>
-      }
-    >
-      <img
-        title={JSON.stringify({
-          coords: [props.tilesetIndex, props.index],
-          data: tileData,
-        })}
-        src={tileData.img.src}
-        alt={`Tile ${props.index}`}
-        data-tile-id={props.index}
-        data-tileset-id={props.tilesetIndex}
-        data-img={JSON.stringify([tileData.img.x, tileData.img.y])}
-        style={getDynamicStyles({
-          ...tileData,
-          size: tileSize(props.tilesetIndex),
-        })}
-        class={`${staticStyles.tile} ${
-          isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
-            ? staticStyles.selected
-            : ""
-        } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
-          isDragging() ? staticStyles.dragging : ""
-        }`}
-        on:click={() => selectTile([props.tilesetIndex, props.index])}
-        on:pointerdown={onPointerDown}
-        on:pointerup={onTouchClick}
-      />
-    </Show>
+    <Image
+      tilesetIndex={props.tilesetIndex}
+      tileIndex={props.index}
+      tileSize={tileSize(props.tilesetIndex)}
+      img={img()}
+      tint={tint()}
+      class={`${
+        isSelectedTile([props.tilesetIndex, props.index]) || isDragOrigin()
+          ? staticStyles.selected
+          : ""
+      } ${isDragTarget() ? staticStyles.dragTarget : ""} ${
+        isDragging() ? staticStyles.dragging : ""
+      }`}
+      onClick={() => selectTile([props.tilesetIndex, props.index])}
+      onDblClick={handleDoubleClick}
+      onPointerDown={onPointerDown}
+      onPointerUp={onTouchClick}
+      data-tile-id={props.index.toString()}
+      data-tileset-id={props.tilesetIndex.toString()}
+      data-img={img() ? JSON.stringify([img().x, img().y]) : "none"}
+    />
   );
 };
 
-function getDynamicStyles({
-  img,
-  size,
-}: {
-  img?: {
-    x: number;
-    y: number;
-  };
-  size: number;
-}) {
-  const sizeStyle = `width: ${size}px; height: ${size}px;`;
+type ImageProps = StyledComponentProps<
+  {
+    tilesetIndex: TilesetIndex;
+    tileIndex: TileIndex;
+    tileSize: number;
+    img?: {
+      src: string;
+      x: number;
+      y: number;
+    };
+    tint?: string;
+  } & Pick<
+    JSX.HTMLAttributes<HTMLElement>,
+    "onClick" | "onDblClick" | "onPointerDown" | "onPointerUp"
+  > &
+    Record<`data-${string}`, any>
+>;
 
-  if (img === undefined) {
-    return sizeStyle;
-  }
+export const Image: Component<ImageProps> = (props) => {
+  const [control, rest] = splitProps(props, [
+    "img",
+    "tint",
+    "tilesetIndex",
+    "tileIndex",
+    "tileSize",
+    "class",
+    "style",
+  ]);
 
-  return `
-    ${sizeStyle};
-    object-position: -${img.x * size}px -${img.y * size}px;
-  `;
-}
+  return (
+    <div
+      {...rest}
+      data-tileset-id={control.tilesetIndex}
+      data-tile-id={control.tileIndex}
+      style={`position: relative; display: inline-block; width: ${control.tileSize}px; height: ${control.tileSize}px; ${control.style}`}
+      class={`${staticStyles.tile} ${control.class}`}
+    >
+      <Switch>
+        <Match when={control.img}>
+          <img
+            src={control.img.src}
+            alt={`Tile ${control.tileIndex}`}
+            style={`object-position: -${control.img.x * control.tileSize}px -${
+              control.img.y * control.tileSize
+            }px`}
+            class={staticStyles.tileImage}
+          />
+        </Match>
+        <Match when={!control.img}>
+          <span {...rest} class={staticStyles.tileImage} />
+        </Match>
+      </Switch>
+      <Show when={control.tint}>
+        <div
+          style={`background-color: ${control.tint}; mix-blend-mode: multiply; opacity: 0.7; width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; ${control.style}`}
+        />
+      </Show>
+    </div>
+  );
+};

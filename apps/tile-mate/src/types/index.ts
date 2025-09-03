@@ -14,11 +14,13 @@ export type Tile =
         x: number;
         y: number;
       };
+      tint?: string; // CSS color value for tinting
     }
   | {
       // Empty Tile
       index: TileIndex;
       img: never;
+      tint?: never;
     };
 
 export type TilesetIndex = number;

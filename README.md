@@ -15,6 +15,7 @@ Try TileMate right now without any installation:
 - **Image Import**: Load tileset images (PNG, JPEG) or create new blank tilesets
 - **Grid Configuration**: Configurable grid and tile sizes with toggleable grid overlay
 - **Tile Management**: Copy, cut, paste, move, and swap tiles with drag-and-drop support
+- **Tile Tinting**: Double‑click a tile to choose a tint color with live preview; tints are preserved in exports
 - **Multi-Tileset Support**: Work with multiple tilesets simultaneously
 - **Export Options**: Save tilesets in PNG or JPEG format
 - **Static Web App**: No backend required, deployable to GitHub Pages
@@ -95,7 +96,8 @@ tile-mate/
 3. **Select Tiles**: Click on tiles to select them, or drag to move/copy tiles
 4. **Choose Mode**: Switch between Copy, Move, or Swap modes for different tile operations
 5. **Grid Overlay**: Toggle grid lines and adjust gap/color for better visibility
-6. **Export**: Save your tileset as PNG or JPEG when ready
+6. **Tint Tiles (optional)**: Double‑click any tile to open the tint dialog, pick a color, preview changes, and Accept to apply (use Clear to remove the tint)
+7. **Export**: Save your tileset as PNG or JPEG; tinted tiles are baked into the exported image
 
 ## 🛠️ Technology Stack
 

@@ -86,6 +86,21 @@ export async function exportTilesetImage(opts: {
         tileSize,
         tileSize
       );
+
+      // If the tile has a tint, apply it using multiply blending to match the UI overlay
+      if (t.tint) {
+        const prevComp = ctx.globalCompositeOperation;
+        const prevAlpha = ctx.globalAlpha;
+
+        ctx.globalCompositeOperation = "multiply";
+        ctx.globalAlpha = 0.7; // Keep in sync with UI overlay opacity
+        ctx.fillStyle = t.tint;
+        ctx.fillRect(dx, dy, tileSize, tileSize);
+
+        // Restore defaults for subsequent draws
+        ctx.globalCompositeOperation = prevComp;
+        ctx.globalAlpha = prevAlpha;
+      }
     } catch (e) {
       // If anything goes wrong with drawing a tile, skip it but continue
       // eslint-disable-next-line no-console

@@ -129,12 +129,14 @@ function createTiles(
           // Create empty tile
           newTiles.push({
             index: newIndex,
+            img: undefined as never,
           });
         }
       } else {
         // Create empty tile for positions outside old grid
         newTiles.push({
           index: newIndex,
+          img: undefined as never,
         });
       }
     }
@@ -361,6 +363,14 @@ export const swapTiles = (
   setStore("selectedTile", [targetTilesetIndex, targetIndex]);
 };
 
+export const setTileTint = (
+  tilesetIndex: TilesetIndex,
+  tileIndex: TileIndex,
+  tint: string | undefined
+) => {
+  setStore("tilesets", tilesetIndex, "tiles", tileIndex, "tint", tint);
+};
+
 export const selectedMode = () => store.mode;
 
 export const selectMode = (mode: DropMode) => {
@@ -399,5 +409,6 @@ export const useTileMateStore = () => {
     swapTiles,
     selectMode,
     setShowGrid,
+    setTileTint,
   };
 };

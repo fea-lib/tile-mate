@@ -1,0 +1,83 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+  min-width: 400px;
+}
+
+.previewSection {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.preview {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.preview h3 {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.previewTile {
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  image-rendering: pixelated;
+  background: transparent;
+  display: block;
+}
+
+.tile {
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  image-rendering: pixelated;
+  background: transparent;
+  display: block;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.tintedTileContainer {
+  border: 2px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+  display: inline-block;
+  min-width: 48px;
+  min-height: 48px;
+}
+
+.tintOverlay {
+  mix-blend-mode: multiply;
+  opacity: 0.7;
+}
+
+.noTint {
+  opacity: 0.5;
+  border-style: dashed;
+}
+
+.colorSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+.colorSection label {
+  font-weight: 500;
+}
+
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
