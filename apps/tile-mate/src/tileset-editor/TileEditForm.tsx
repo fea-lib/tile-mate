@@ -92,7 +92,6 @@ export const TileEditForm: Component<Props> = (props) => {
             type="color"
             value={selectedTint()}
             onInput={(e) => handleTintChange(e.currentTarget.value)}
-            style="width: 60px; height: 30px; padding: 0;"
           />
           <Show when={selectedTint()}>
             <Button onClick={() => setSelectedTint("")}>Clear</Button>

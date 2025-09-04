@@ -130,7 +130,6 @@ const Actions: Component = () => {
           <Input
             type="color"
             value={gridColor()}
-            style="width:40px; height:20.5px; padding:0;"
             onInput={(e) => updateGrid({ color: e.currentTarget.value })}
           />
         </Show>

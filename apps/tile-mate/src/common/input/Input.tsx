@@ -19,7 +19,9 @@ export const Input: Component<Props> = (allProps) => {
     <input
       {...others}
       type={local.type ?? "text"}
-      class={`${staticStyles.input} ${local.class ?? ""}`}
+      class={`${staticStyles.input} ${
+        local.type === "color" ? staticStyles.color : ""
+      } ${local.class ?? ""}`}
     />
   );
 };

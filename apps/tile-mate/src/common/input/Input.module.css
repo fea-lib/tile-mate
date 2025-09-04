@@ -19,3 +19,9 @@
   color: #808080;
   border-color: #808080 #ffffff #ffffff #808080;
 }
+
+.color {
+  width: 40px;
+  height: 20.5px;
+  padding: 0;
+}
