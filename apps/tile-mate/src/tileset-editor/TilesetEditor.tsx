@@ -19,8 +19,8 @@ export const TilesetEditor: Component = () => {
       <div class={staticStyles.tilesetEditor}>
         <Actions />
         <div class={staticStyles.tilesets}>
-          <For each={tilesets()}>
-            {(tileset) => <Tileset tilesetIndex={tileset.index} />}
+          <For each={Object.keys(tilesets())}>
+            {(tilesetIndex) => <Tileset tilesetIndex={Number(tilesetIndex)} />}
           </For>
         </div>
       </div>

@@ -12,7 +12,7 @@ type Props = {
 export const NewTilesetForm: Component<Props> = ({ onCancel, onSubmit }) => {
   const { addTileset, addEmptyTileset } = useTileMateStore();
 
-  const [tileSize, setTileSize] = createSignal(16);
+  const [tileSize, setTileSize] = createSignal(48);
   const [imageFile, setImageFile] = createSignal<File | null>(null);
   const [imageUrl, setImageUrl] = createSignal<string | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);

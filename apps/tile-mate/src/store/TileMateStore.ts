@@ -5,14 +5,14 @@ import { debounce } from "../common/debounce";
 type SelectedTile = [TilesetIndex, TileIndex];
 
 export type TileMateStoreState = {
-  tilesets: Tileset[];
+  tilesets: Record<TilesetIndex, Tileset>;
   selectedTile: SelectedTile | undefined;
   mode: DropMode;
   showGrid: boolean | { color?: string; gap?: number };
 };
 
 const initialState: TileMateStoreState = {
-  tilesets: [],
+  tilesets: {},
   mode: DropMode.Copy,
   selectedTile: undefined,
   showGrid: true,
@@ -20,6 +20,7 @@ const initialState: TileMateStoreState = {
 
 const [store, setStore] = createStore(initialState);
 
+// Return tilesets as a sorted array (stable ascending by index) to preserve existing consumer expectations
 export const tilesets = () => store.tilesets;
 
 export const tileset = (tilesetIndex: TilesetIndex): Tileset | undefined => {
@@ -145,14 +146,21 @@ function createTiles(
   return newTiles;
 }
 
+let nextTilesetIndex = 0;
+
+function getNextTilesetIndex(): TilesetIndex {
+  const index = nextTilesetIndex;
+  nextTilesetIndex++;
+  return index;
+}
+
 export const addTileset = (
   tilesetImage: string,
   tileSize: number
 ): Promise<TilesetIndex> => {
   return new Promise((resolve, reject) => {
-    const tilesetIndex = store.tilesets.length;
+    const tilesetIndex = getNextTilesetIndex();
 
-    // Create initial tileset state
     const initialTilesetState: Tileset = {
       index: tilesetIndex,
       tiles: [],
@@ -165,9 +173,8 @@ export const addTileset = (
       },
     };
 
-    setStore("tilesets", tilesetIndex, initialTilesetState);
+    setStore("tilesets", tilesetIndex, initialTilesetState as any);
 
-    // Load image and calculate tiles
     const img = new Image();
 
     img.onload = () => {
@@ -184,7 +191,7 @@ export const addTileset = (
           url: tilesetImage,
           isLoading: false,
         },
-      });
+      } as any);
 
       resolve(tilesetIndex);
     };
@@ -204,7 +211,7 @@ export const addEmptyTileset = (
   columns: number = 5,
   rows: number = 5
 ): TilesetIndex => {
-  const tilesetIndex = store.tilesets.length;
+  const tilesetIndex = getNextTilesetIndex();
 
   const newTileset: Tileset = {
     index: tilesetIndex,
@@ -212,29 +219,31 @@ export const addEmptyTileset = (
     tileSize,
     columns,
     rows,
-    // No image property for empty tilesets
   };
 
-  setStore("tilesets", tilesetIndex, newTileset);
+  setStore("tilesets", tilesetIndex, newTileset as any);
 
   return tilesetIndex;
 };
 
 export const removeTileSet = (tilesetIndex: TilesetIndex) => {
-  if (store.tilesets[tilesetIndex]) {
-    console.log(
-      "removing tileset:",
-      tilesetIndex,
-      store.tilesets
-        .slice(0, tilesetIndex)
-        .concat(store.tilesets.slice(tilesetIndex + 1))
-    );
-    setStore(
-      "tilesets",
-      store.tilesets
-        .slice(0, tilesetIndex)
-        .concat(store.tilesets.slice(tilesetIndex + 1))
-    );
+  if (!store.tilesets[tilesetIndex]) return;
+
+  setStore(
+    "tilesets",
+    produce((tilesets) => {
+      delete tilesets[tilesetIndex];
+
+      return tilesets;
+    })
+  );
+
+  // Adjust selected tile if needed
+  if (store.selectedTile) {
+    const [selTileset, selTile] = store.selectedTile;
+    if (selTileset === tilesetIndex) {
+      setStore("selectedTile", undefined);
+    }
   }
 };
 
