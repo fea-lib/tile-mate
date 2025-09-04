@@ -11,8 +11,9 @@ type Props = {
   tilesetIndex: TilesetIndex;
 };
 
-export const Tileset: Component<Props> = ({ tilesetIndex }) => {
+export const Tileset: Component<Props> = (props) => {
   const {
+    removeTileSet,
     columns,
     rows,
     setColumns,
@@ -30,7 +31,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
     const target = event.target as HTMLInputElement;
     const value = parseInt(target.value);
     if (!isNaN(value) && value > 0) {
-      setTileSize(tilesetIndex, value);
+      setTileSize(props.tilesetIndex, value);
     }
   };
 
@@ -38,7 +39,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
     const target = event.target as HTMLInputElement;
     const value = parseInt(target.value);
     if (!isNaN(value) && value > 0) {
-      setColumns(tilesetIndex, value);
+      setColumns(props.tilesetIndex, value);
     }
   };
 
@@ -46,7 +47,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
     const target = event.target as HTMLInputElement;
     const value = parseInt(target.value);
     if (!isNaN(value) && value > 0) {
-      setRows(tilesetIndex, value);
+      setRows(props.tilesetIndex, value);
     }
   };
 
@@ -57,12 +58,12 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
     setIsSaving(true);
     try {
       await exportTilesetImage({
-        tiles: tiles(tilesetIndex),
-        columns: columns(tilesetIndex),
-        rows: rows(tilesetIndex),
-        tileSize: tileSize(tilesetIndex),
+        tiles: tiles(props.tilesetIndex),
+        columns: columns(props.tilesetIndex),
+        rows: rows(props.tilesetIndex),
+        tileSize: tileSize(props.tilesetIndex),
         format: format(),
-        filename: `tileset-${tilesetIndex}.${
+        filename: `tileset-${props.tilesetIndex}.${
           format() === "png" ? "png" : "jpg"
         }`,
       });
@@ -77,8 +78,15 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
   return (
     <div class={staticStyles.tilesetFrame}>
       <div class={staticStyles.tilesetHeader}>
-        <span class={staticStyles.tilesetTitle}>Tileset {tilesetIndex}</span>
+        <span class={staticStyles.tilesetTitle}>
+          Tileset {props.tilesetIndex}
+        </span>
         <div class={staticStyles.tilesetControls}>
+          <div class={staticStyles.controlGroup}>
+            <Button onClick={() => removeTileSet(props.tilesetIndex)}>
+              Remove
+            </Button>
+          </div>
           <div class={staticStyles.controlGroup}>
             <label>Format:</label>
             <select
@@ -98,7 +106,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
             <label>Tile Size:</label>
             <Input
               type="number"
-              value={tileSize(tilesetIndex)}
+              value={tileSize(props.tilesetIndex)}
               onInput={handleTileSizeChange}
               min={1}
             />
@@ -107,7 +115,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
             <label>Columns:</label>
             <Input
               type="number"
-              value={columns(tilesetIndex)}
+              value={columns(props.tilesetIndex)}
               onInput={handleColumnsChange}
               min={1}
             />
@@ -116,7 +124,7 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
             <label>Rows:</label>
             <Input
               type="number"
-              value={rows(tilesetIndex)}
+              value={rows(props.tilesetIndex)}
               onInput={handleRowsChange}
               min={1}
             />
@@ -129,13 +137,15 @@ export const Tileset: Component<Props> = ({ tilesetIndex }) => {
           class={staticStyles.tileset}
           style={getDynamicStyle({
             grid: grid(),
-            tileSize: tileSize(tilesetIndex),
-            columns: columns(tilesetIndex),
-            rows: rows(tilesetIndex),
+            tileSize: tileSize(props.tilesetIndex),
+            columns: columns(props.tilesetIndex),
+            rows: rows(props.tilesetIndex),
           })}
         >
-          <For each={tiles(tilesetIndex)}>
-            {({ index }) => <Tile tilesetIndex={tilesetIndex} index={index} />}
+          <For each={tiles(props.tilesetIndex)}>
+            {({ index }) => (
+              <Tile tilesetIndex={props.tilesetIndex} index={index} />
+            )}
           </For>
         </div>
       </div>

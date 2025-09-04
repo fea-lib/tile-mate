@@ -1,4 +1,4 @@
-import { createStore } from "solid-js/store";
+import { createStore, produce } from "solid-js/store";
 import { DropMode, TileIndex, TilesetIndex, Tileset, Tile } from "../types";
 import { debounce } from "../common/debounce";
 
@@ -220,6 +220,24 @@ export const addEmptyTileset = (
   return tilesetIndex;
 };
 
+export const removeTileSet = (tilesetIndex: TilesetIndex) => {
+  if (store.tilesets[tilesetIndex]) {
+    console.log(
+      "removing tileset:",
+      tilesetIndex,
+      store.tilesets
+        .slice(0, tilesetIndex)
+        .concat(store.tilesets.slice(tilesetIndex + 1))
+    );
+    setStore(
+      "tilesets",
+      store.tilesets
+        .slice(0, tilesetIndex)
+        .concat(store.tilesets.slice(tilesetIndex + 1))
+    );
+  }
+};
+
 export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
   debounce(`columns-${tilesetIndex}`, () => {
     if (store.tilesets[tilesetIndex]) {
@@ -401,6 +419,7 @@ export const useTileMateStore = () => {
     // Commands
     addTileset,
     addEmptyTileset,
+    removeTileSet,
     setColumns,
     setRows,
     setTileSize,
