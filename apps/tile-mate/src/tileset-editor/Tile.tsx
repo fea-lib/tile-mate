@@ -159,9 +159,6 @@ export const Tile: Component<Props> = (props) => {
       onDblClick={handleDoubleClick}
       onPointerDown={onPointerDown}
       onPointerUp={onTouchClick}
-      data-tile-id={props.index.toString()}
-      data-tileset-id={props.tilesetIndex.toString()}
-      data-img={img() ? JSON.stringify([img().x, img().y]) : "none"}
     />
   );
 };
@@ -194,19 +191,44 @@ export const Image: Component<ImageProps> = (props) => {
     "class",
     "style",
   ]);
+  // Precompute size to avoid repeating template string churn in reactive style
+  const size = () => `${control.tileSize}px`;
 
-  // Reactive background styling (recomputes on control.img/control.tint changes)
-  const backgroundStyles = () => {
-    const img = control.img; // reactive read
-    const tint = control.tint; // reactive read
-    if (!img) return "";
+  // Style object (Solid merges without string parsing). Contains only reactive keys.
+  const styleObj = () => {
+    const img = control.img;
+    const tint = control.tint;
+    const base: Record<string, string> = {
+      width: size(),
+      height: size(),
+      position: "relative",
+      display: "inline-block",
+      "image-rendering": "pixelated",
+      // Contain layout/paint to each tile to reduce large reflows
+      contain: "layout paint style",
+      // Suggest to browser that transform/outline may change (dragging)
+      "will-change": "transform",
+      // Explicitly clear previous tint styles when not applied
+      "background-color": "transparent",
+      "background-blend-mode": "normal",
+    };
+    if (!img) {
+      // Empty slot styling (lightweight placeholder via background instead of extra span element)
+      base["background"] =
+        "repeating-conic-gradient(#444 0% 25%, #333 0% 50%) 50% / 8px 8px";
+      return base;
+    }
     const offsetX = img.x * control.tileSize;
     const offsetY = img.y * control.tileSize;
+    base["background-image"] = `url(${img.src})`;
+    base["background-position"] = `-${offsetX}px -${offsetY}px`;
+    base["background-repeat"] = "no-repeat";
     if (tint) {
       const rgb = hexToRgb(tint);
-      return `background-image: url(${img.src}); background-color: rgba(${rgb},0.7); background-blend-mode: multiply; background-position: -${offsetX}px -${offsetY}px; background-repeat: no-repeat; image-rendering: pixelated;`;
+      base["background-color"] = `rgba(${rgb},0.7)`;
+      base["background-blend-mode"] = "multiply";
     }
-    return `background-image: url(${img.src}); background-position: -${offsetX}px -${offsetY}px; background-repeat: no-repeat; image-rendering: pixelated;`;
+    return base;
   };
 
   return (
@@ -214,17 +236,14 @@ export const Image: Component<ImageProps> = (props) => {
       {...rest}
       role="button"
       aria-label={`Tile ${control.tileIndex}`}
-      data-tileset-id={control.tilesetIndex}
-      data-tile-id={control.tileIndex}
-      style={`position: relative; display: inline-block; width: ${
-        control.tileSize
-      }px; height: ${control.tileSize}px; ${backgroundStyles()} ${
-        control.style
-      }`}
+      data-tile-id={control.tileIndex.toString()}
+      data-tileset-id={control.tilesetIndex.toString()}
+      data-img={
+        control.img ? JSON.stringify([control.img.x, control.img.y]) : "none"
+      }
       class={`${staticStyles.tile} ${control.class}`}
-    >
-      {!control.img && <span class={staticStyles.tileImage} />}
-    </div>
+      style={styleObj()}
+    />
   );
 };
 

@@ -114,6 +114,7 @@ function createTiles(
                 y,
               }
             : undefined,
+          tint: undefined,
         });
         continue;
       }
@@ -122,12 +123,24 @@ function createTiles(
         const oldIndex = y * (oldColumns as number) + x;
         const existingTile = existingTiles![oldIndex];
         if (existingTile) {
-          newTiles.push({ ...existingTile, index: newIndex });
+          newTiles.push({
+            ...existingTile,
+            index: newIndex,
+            tint: existingTile.tint ?? undefined,
+          });
         } else {
-          newTiles.push({ index: newIndex, img: undefined as never });
+          newTiles.push({
+            index: newIndex,
+            img: undefined as never,
+            tint: undefined,
+          });
         }
       } else {
-        newTiles.push({ index: newIndex, img: undefined as never });
+        newTiles.push({
+          index: newIndex,
+          img: undefined as never,
+          tint: undefined,
+        });
       }
     }
   }
@@ -351,6 +364,7 @@ export const copyTile = (
     const copiedTile = {
       ...sourceTile,
       index: targetIndex,
+      tint: sourceTile.tint ?? undefined, // ensure explicit overwrite of previous tint
     };
 
     setStore("tilesets", targetTilesetIndex, "tiles", targetIndex, copiedTile);
@@ -369,13 +383,18 @@ export const swapTiles = (
   if (!store.tilesets[sourceTilesetIndex].tiles[sourceIndex]) return;
   if (!store.tilesets[targetTilesetIndex].tiles[targetIndex]) return;
 
+  const sourceTile = store.tilesets[sourceTilesetIndex].tiles[sourceIndex];
+  const targetTile = store.tilesets[targetTilesetIndex].tiles[targetIndex];
+
   const swappedSourceTile = {
-    ...store.tilesets[sourceTilesetIndex].tiles[sourceIndex],
+    ...sourceTile,
     index: targetIndex,
+    tint: sourceTile.tint ?? undefined,
   };
   const swappedTargetTile = {
-    ...store.tilesets[targetTilesetIndex].tiles[targetIndex],
+    ...targetTile,
     index: sourceIndex,
+    tint: targetTile.tint ?? undefined,
   };
 
   setStore(
