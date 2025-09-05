@@ -51,10 +51,22 @@
   background-color: #ffffff;
   flex: 1;
   overflow: auto;
+  /* Prevent accidental text/image selection highlighting on mobile */
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 .tilesetContent canvas {
   image-rendering: pixelated;
   cursor: pointer;
   display: block;
+  /* Prevent mobile (iOS / Android) blue tap highlight & text selection */
+  -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  /* Avoid accidental focus outline flash on some browsers */
+  outline: none;
+  /* Disable default drag image / ghost */
+  -webkit-user-drag: none;
 }

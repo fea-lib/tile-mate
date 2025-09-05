@@ -195,48 +195,164 @@ export const Tileset: Component<Props> = (props) => {
   const { selectTile, selectedMode, copyTile, swapTiles, setTileTint } =
     useTileMateStore();
 
-  const onPointerDownCanvas = (e: PointerEvent) => {
-    const idx = handlePointerEvent(e);
-    if (idx === undefined) return;
-    startDrag({ tilesetIndex: props.tilesetIndex, tileIndex: idx });
+  // --- Unified mouse/touch drag logic adopting legacy semantics ---
+  let longPressTimer: number | undefined;
+  let longPressFired = false; // only ever true after initial activation until drag ends
+  let downIndex: number | undefined;
+  let downPointerType: string | undefined;
+  const LONG_PRESS_MS = 300; // faster activation per updated UX
+  let startX = 0;
+  let startY = 0;
+  const MOVE_CANCEL_PX = 8; // movement threshold before cancelling long press
+  // Touch drag phases
+  let hasActivated = false; // long press triggered
+  let hasReleasedAfterActivation = false; // user lifted after activation (now can scroll)
+  // Simplified: we rely on global awaitingTarget (set after first release) and a single subsequent pointerup
+
+  const clearLongPress = () => {
+    if (longPressTimer !== undefined) {
+      window.clearTimeout(longPressTimer);
+      longPressTimer = undefined;
+    }
+  };
+
+  const cancelPendingLongPress = () => {
+    clearLongPress();
+    longPressFired = false;
+    downIndex = undefined;
+    hasActivated = false;
+    hasReleasedAfterActivation = false;
+    // secondary tap state not tracked with simplified approach
+  };
+
+  const beginDrag = (idx: number, persistent: boolean) => {
+    startDrag(
+      { tilesetIndex: props.tilesetIndex, tileIndex: idx },
+      { persistent }
+    );
     selectTile([props.tilesetIndex, idx]);
     redrawOverlay();
   };
 
+  const onPointerDownCanvas = (e: PointerEvent) => {
+    const idx = handlePointerEvent(e);
+    if (idx === undefined) return;
+    // If already awaiting target, record the touch so pointerup can finalize the operation
+    if (e.pointerType === "touch" && dragSignals.awaitingTarget?.()) {
+      downIndex = idx;
+      downPointerType = e.pointerType; // mark as touch so pointerup path executes
+      // Ensure no stray long-press timer from a previous interaction
+      clearLongPress();
+      // We purposely do NOT set longPressFired; pointerup handler now checks awaitingTarget first
+      return;
+    }
+    downIndex = idx;
+    downPointerType = e.pointerType;
+    if (e.pointerType === "touch") {
+      if (dragSignals.isPersistent()) return; // safety: shouldn't happen, but avoid re-init
+      longPressFired = false; // Only reset if not already active
+      startX = e.clientX;
+      startY = e.clientY;
+      clearLongPress();
+      longPressTimer = window.setTimeout(() => {
+        if (downIndex !== undefined) {
+          longPressFired = true;
+          hasActivated = true;
+          hasReleasedAfterActivation = false;
+          beginDrag(downIndex, true);
+        }
+      }, LONG_PRESS_MS) as unknown as number;
+    } else {
+      beginDrag(idx, false);
+    }
+  };
+
   const onPointerMoveCanvas = (e: PointerEvent) => {
     const idx = handlePointerEvent(e);
+    // If touch and long press pending, cancel when user scrolls/moves significantly
+    if (downPointerType === "touch" && !longPressFired && longPressTimer) {
+      const dx = Math.abs(e.clientX - startX);
+      const dy = Math.abs(e.clientY - startY);
+      if (dx > MOVE_CANCEL_PX || dy > MOVE_CANCEL_PX) {
+        cancelPendingLongPress();
+        return; // allow native scroll
+      }
+    }
     if (dragSignals.isDragging()) {
       if (idx !== undefined)
         updateHover({ tilesetIndex: props.tilesetIndex, tileIndex: idx });
       else updateHover(undefined);
       redrawOverlay();
     }
+    // No second-tap movement tracking needed
   };
 
   const onPointerUpCanvas = (e: PointerEvent) => {
+    const idx = handlePointerEvent(e);
+    if (downPointerType === "touch") {
+      // Scenario C (handled first now): awaiting target tap globally (second tap phase)
+      if (dragSignals.awaitingTarget?.()) {
+        const src = dragSignals.dragSource();
+        const targetIdx = idx;
+        if (src && targetIdx !== undefined) {
+          if (
+            src.tilesetIndex !== props.tilesetIndex ||
+            src.tileIndex !== targetIdx
+          ) {
+            const mode = selectedMode();
+            if (mode === "Copy") {
+              copyTile(
+                src.tilesetIndex,
+                src.tileIndex,
+                props.tilesetIndex,
+                targetIdx
+              );
+            } else if (mode === "Swap") {
+              swapTiles(
+                src.tilesetIndex,
+                src.tileIndex,
+                props.tilesetIndex,
+                targetIdx
+              );
+            }
+            redraw();
+          }
+        }
+        endDrag();
+        dragSignals.setAwaitingTarget?.(false as any);
+        cancelPendingLongPress();
+        redrawOverlay();
+        return;
+      }
+      // Scenario A: long press not fired -> simple tap select
+      if (!longPressFired) {
+        cancelPendingLongPress();
+        if (idx !== undefined) selectTile([props.tilesetIndex, idx]);
+        redrawOverlay();
+        return;
+      }
+      // Scenario B: long press fired but first release after activation -> transition to await-target phase
+      if (hasActivated && !hasReleasedAfterActivation) {
+        hasReleasedAfterActivation = true;
+        // notify globally so other tilesets can accept the next tap
+        dragSignals.setAwaitingTarget?.(true as any);
+        clearLongPress();
+        // Keep drag active; user can now scroll
+        return;
+      }
+      // Scenario D: pointerup not part of a tap (e.g., scroll end) -> ignore
+      return;
+    }
+    // Desktop path
     const src = dragSignals.dragSource();
     if (!src) return;
-    const targetIdx = handlePointerEvent(e);
-    if (targetIdx !== undefined) {
-      const mode = selectedMode();
-      if (
-        src.tilesetIndex !== props.tilesetIndex ||
-        src.tileIndex !== targetIdx
-      ) {
+    if (idx !== undefined) {
+      if (src.tilesetIndex !== props.tilesetIndex || src.tileIndex !== idx) {
+        const mode = selectedMode();
         if (mode === "Copy") {
-          copyTile(
-            src.tilesetIndex,
-            src.tileIndex,
-            props.tilesetIndex,
-            targetIdx
-          );
+          copyTile(src.tilesetIndex, src.tileIndex, props.tilesetIndex, idx);
         } else if (mode === "Swap") {
-          swapTiles(
-            src.tilesetIndex,
-            src.tileIndex,
-            props.tilesetIndex,
-            targetIdx
-          );
+          swapTiles(src.tilesetIndex, src.tileIndex, props.tilesetIndex, idx);
         }
         redraw();
       }
@@ -355,9 +471,35 @@ export const Tileset: Component<Props> = (props) => {
       <div class={staticStyles.tilesetContent}>
         <canvas
           ref={canvasRef}
-          onPointerDown={onPointerDownCanvas as any}
+          draggable={false}
+          tabIndex={-1}
+          onPointerDown={(e: any) => {
+            onPointerDownCanvas(e);
+          }}
           onPointerMove={onPointerMoveCanvas as any}
           onPointerUp={onPointerUpCanvas as any}
+          onPointerCancel={
+            (() => {
+              // pointercancel is fired on scroll / gesture; we only abort if still pending long press
+              const pending = !longPressFired && !!longPressTimer; // not yet activated
+              if (pending) {
+                cancelPendingLongPress();
+              }
+              // Do NOT end a persistent drag that's already activated; allow scroll while awaiting target
+              if (!dragSignals.isPersistent() && dragSignals.isDragging()) {
+                endDrag();
+              }
+              redrawOverlay();
+            }) as any
+          }
+          onContextMenu={(e) => {
+            // Block context menu when touch long-press is being evaluated or active drag from touch
+            if (downPointerType === "touch" || dragSignals.isPersistent()) {
+              e.preventDefault();
+              e.stopPropagation();
+            }
+          }}
+          style={{ "touch-action": "pan-y pinch-zoom" }}
           onDblClick={onDblClickCanvas as any}
         />
       </div>
