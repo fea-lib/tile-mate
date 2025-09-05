@@ -105,7 +105,6 @@ function createTiles(
 
   const tilesetImageSrc = tilesetImage(tilesetIndex);
 
-  // Create new grid
   for (let y = 0; y < newRows; y++) {
     for (let x = 0; x < newColumns; x++) {
       const newIndex = y * newColumns + x;
@@ -121,34 +120,19 @@ function createTiles(
               }
             : undefined,
         });
-
         continue;
       }
 
-      // Check if this position existed in the old grid
-      if (x < oldColumns && y < oldRows) {
-        const oldIndex = y * oldColumns + x;
-        const existingTile = existingTiles[oldIndex];
-
+      if (x < (oldColumns as number) && y < (oldRows as number)) {
+        const oldIndex = y * (oldColumns as number) + x;
+        const existingTile = existingTiles![oldIndex];
         if (existingTile) {
-          // Preserve existing tile but update index
-          newTiles.push({
-            ...existingTile,
-            index: newIndex,
-          });
+          newTiles.push({ ...existingTile, index: newIndex });
         } else {
-          // Create empty tile
-          newTiles.push({
-            index: newIndex,
-            img: undefined as never,
-          });
+          newTiles.push({ index: newIndex, img: undefined as never });
         }
       } else {
-        // Create empty tile for positions outside old grid
-        newTiles.push({
-          index: newIndex,
-          img: undefined as never,
-        });
+        newTiles.push({ index: newIndex, img: undefined as never });
       }
     }
   }
@@ -263,6 +247,8 @@ export const setColumns = (tilesetIndex: TilesetIndex, newColumns: number) => {
       const oldRows = tileset.rows;
       const existingTiles = tileset.tiles;
 
+      if (newColumns === oldColumns || newColumns < 1) return;
+
       setStore("tilesets", tilesetIndex, "columns", newColumns);
       setStore(
         "tilesets",
@@ -289,6 +275,8 @@ export const setRows = (tilesetIndex: TilesetIndex, newRows: number) => {
       const oldRows = tileset.rows;
       const existingTiles = tileset.tiles;
 
+      if (newRows === oldRows || newRows < 1) return;
+
       setStore("tilesets", tilesetIndex, "rows", newRows);
       setStore(
         "tilesets",
@@ -312,25 +300,39 @@ export const setTileSize = (
   newTileSize: number
 ) => {
   debounce(`tileSize-${tilesetIndex}`, () => {
-    if (store.tilesets[tilesetIndex]) {
-      const tileset = store.tilesets[tilesetIndex];
-      const oldColumns = tileset.columns;
-      const oldRows = tileset.rows;
+    if (!store.tilesets[tilesetIndex]) return;
+    if (store.tilesets[tilesetIndex].tileSize === newTileSize) return;
 
-      const tilesetWidth = oldColumns * tileset.tileSize;
-      const tilesetHeight = oldRows * tileset.tileSize;
+    const tileset = store.tilesets[tilesetIndex];
+    const oldColumns = tileset.columns;
+    const oldRows = tileset.rows;
 
-      const newColumns = Math.floor(tilesetWidth / newTileSize);
-      const newRows = Math.floor(tilesetHeight / newTileSize);
+    const tilesetWidth = oldColumns * tileset.tileSize;
+    const tilesetHeight = oldRows * tileset.tileSize;
 
-      setStore("tilesets", tilesetIndex, "tileSize", newTileSize);
+    const newColumns = Math.floor(tilesetWidth / newTileSize);
+    const newRows = Math.floor(tilesetHeight / newTileSize);
+
+    if (newColumns < 1 || newRows < 1) return; // ignore invalid
+    const dimsChanged =
+      newColumns !== tileset.columns || newRows !== tileset.rows;
+
+    setStore("tilesets", tilesetIndex, "tileSize", newTileSize);
+    if (dimsChanged) {
       setStore("tilesets", tilesetIndex, "columns", newColumns);
       setStore("tilesets", tilesetIndex, "rows", newRows);
       setStore(
         "tilesets",
         tilesetIndex,
         "tiles",
-        createTiles(tilesetIndex, newRows, newColumns)
+        createTiles(
+          tilesetIndex,
+          newRows,
+          newColumns,
+          tileset.tiles,
+          oldColumns,
+          oldRows
+        )
       );
     }
   });
