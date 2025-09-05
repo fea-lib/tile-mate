@@ -10,6 +10,7 @@ export type TileMateStoreState = {
   selectedTile: SelectedTile | undefined;
   mode: DropMode;
   showGrid: boolean | { color?: string; gap?: number };
+  nextTilesetIndex: TilesetIndex;
 };
 
 const initialState: TileMateStoreState = {
@@ -17,6 +18,7 @@ const initialState: TileMateStoreState = {
   mode: DropMode.Copy,
   selectedTile: undefined,
   showGrid: true,
+  nextTilesetIndex: 0,
 };
 
 const [store, setStore] = createStore(initialState);
@@ -154,11 +156,9 @@ function createTiles(
   return newTiles;
 }
 
-let nextTilesetIndex = 0;
-
 function getNextTilesetIndex(): TilesetIndex {
-  const index = nextTilesetIndex;
-  nextTilesetIndex++;
+  const index = store.nextTilesetIndex;
+  setStore("nextTilesetIndex", index + 1);
   return index;
 }
 
