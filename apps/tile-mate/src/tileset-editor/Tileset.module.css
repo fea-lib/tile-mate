@@ -53,7 +53,8 @@
   overflow: auto;
 }
 
-.tileset {
-  display: inline-grid;
-  overflow: auto;
+.tilesetContent canvas {
+  image-rendering: pixelated;
+  cursor: pointer;
+  display: block;
 }

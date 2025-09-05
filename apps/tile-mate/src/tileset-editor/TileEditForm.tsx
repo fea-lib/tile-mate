@@ -3,7 +3,6 @@ import { Button } from "../common/button/Button";
 import { Input } from "../common/input/Input";
 import { TileIndex, TilesetIndex } from "../types";
 import { useTileMateStore } from "../store/TileMateStore";
-import { Image } from "./Tile";
 import staticStyles from "./TileEditForm.module.css";
 
 type Props = {
@@ -51,7 +50,7 @@ export const TileEditForm: Component<Props> = (props) => {
         <div class={staticStyles.previewSection}>
           <div class={staticStyles.preview}>
             <h3>Original</h3>
-            <Image
+            <PreviewImage
               tilesetIndex={props.tilesetIndex}
               tileIndex={props.tileIndex}
               tileSize={previewSize}
@@ -65,7 +64,7 @@ export const TileEditForm: Component<Props> = (props) => {
             <Show
               when={selectedTint()}
               fallback={
-                <Image
+                <PreviewImage
                   tilesetIndex={props.tilesetIndex}
                   tileIndex={props.tileIndex}
                   tileSize={previewSize!}
@@ -74,7 +73,7 @@ export const TileEditForm: Component<Props> = (props) => {
                 />
               }
             >
-              <Image
+              <PreviewImage
                 tilesetIndex={props.tilesetIndex}
                 tileIndex={props.tileIndex}
                 tileSize={previewSize}
@@ -106,3 +105,70 @@ export const TileEditForm: Component<Props> = (props) => {
     </Show>
   );
 };
+
+// Local minimal Image preview component (decoupled from legacy Tile.tsx)
+const PreviewImage: Component<{
+  tilesetIndex: TilesetIndex; // kept for potential future a11y labels
+  tileIndex: TileIndex;
+  tileSize: number;
+  img?: { src: string; x: number; y: number };
+  tint?: string;
+  class?: string;
+}> = (p) => {
+  const size = () => `${p.tileSize}px`;
+  const style = () => {
+    const base: Record<string, string> = {
+      width: size(),
+      height: size(),
+      position: "relative",
+      display: "inline-block",
+      "image-rendering": "pixelated",
+      contain: "layout paint style",
+      "background-color": "transparent",
+      "background-blend-mode": "normal",
+    };
+    if (!p.img) {
+      base["background"] =
+        "repeating-conic-gradient(#444 0% 25%, #333 0% 50%) 50% / 8px 8px";
+      return base;
+    }
+    const offsetX = p.img.x * p.tileSize;
+    const offsetY = p.img.y * p.tileSize;
+    base["background-image"] = `url(${p.img.src})`;
+    base["background-position"] = `-${offsetX}px -${offsetY}px`;
+    base["background-repeat"] = "no-repeat";
+    if (p.tint) {
+      const rgb = hexToRgb(p.tint);
+      base["background-color"] = `rgba(${rgb},0.7)`;
+      base["background-blend-mode"] = "multiply";
+    }
+    return base;
+  };
+  return (
+    <div
+      class={p.class}
+      role="img"
+      aria-label={`Tile ${p.tileIndex}`}
+      style={style()}
+      data-preview-tile
+    />
+  );
+};
+
+// Simple hex (#rgb/#rrggbb) to r,g,b string converter
+function hexToRgb(hex: string): string {
+  if (!hex) return "255,0,255";
+  let value = hex.replace("#", "").trim();
+  if (value.length === 3) {
+    value = value
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  if (value.length !== 6 || /[^0-9a-fA-F]/.test(value)) return "255,0,255";
+  const num = parseInt(value, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `${r},${g},${b}`;
+}

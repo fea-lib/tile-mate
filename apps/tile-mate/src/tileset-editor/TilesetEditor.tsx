@@ -9,22 +9,19 @@ import staticStyles from "./TilesetEditor.module.css";
 import { Input } from "../common/input/Input";
 import { showModal } from "../common/modal/Modal";
 import { NewTilesetForm } from "./NewTilesetForm";
-import { DragContextProvider } from "./drag/DragContext";
 
 export const TilesetEditor: Component = () => {
   const { tilesetIndices } = useTileMateStore();
 
   return (
-    <DragContextProvider>
-      <div class={staticStyles.tilesetEditor}>
-        <Actions />
-        <div class={staticStyles.tilesets}>
-          <For each={tilesetIndices()}>
-            {(tilesetIndex) => <Tileset tilesetIndex={tilesetIndex} />}
-          </For>
-        </div>
+    <div class={staticStyles.tilesetEditor}>
+      <Actions />
+      <div class={staticStyles.tilesets}>
+        <For each={tilesetIndices()}>
+          {(tilesetIndex) => <Tileset tilesetIndex={tilesetIndex} />}
+        </For>
       </div>
-    </DragContextProvider>
+    </div>
   );
 };
 
