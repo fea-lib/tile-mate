@@ -12,15 +12,15 @@ import { NewTilesetForm } from "./NewTilesetForm";
 import { DragContextProvider } from "./drag/DragContext";
 
 export const TilesetEditor: Component = () => {
-  const { tilesets } = useTileMateStore();
+  const { tilesetIndices } = useTileMateStore();
 
   return (
     <DragContextProvider>
       <div class={staticStyles.tilesetEditor}>
         <Actions />
         <div class={staticStyles.tilesets}>
-          <For each={Object.keys(tilesets())}>
-            {(tilesetIndex) => <Tileset tilesetIndex={Number(tilesetIndex)} />}
+          <For each={tilesetIndices()}>
+            {(tilesetIndex) => <Tileset tilesetIndex={tilesetIndex} />}
           </For>
         </div>
       </div>
