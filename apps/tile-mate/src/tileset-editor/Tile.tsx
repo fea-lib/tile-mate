@@ -1,4 +1,4 @@
-import { type Component, JSX, splitProps, Switch, Match, Show } from "solid-js";
+import { type Component, JSX, splitProps } from "solid-js";
 import { useDragAndDrop } from "./drag/useDrag";
 import staticStyles from "./Tile.module.css";
 import { DropMode, TileIndex, TilesetIndex } from "../types";
@@ -195,34 +195,53 @@ export const Image: Component<ImageProps> = (props) => {
     "style",
   ]);
 
+  // Reactive background styling (recomputes on control.img/control.tint changes)
+  const backgroundStyles = () => {
+    const img = control.img; // reactive read
+    const tint = control.tint; // reactive read
+    if (!img) return "";
+    const offsetX = img.x * control.tileSize;
+    const offsetY = img.y * control.tileSize;
+    if (tint) {
+      const rgb = hexToRgb(tint);
+      return `background-image: url(${img.src}); background-color: rgba(${rgb},0.7); background-blend-mode: multiply; background-position: -${offsetX}px -${offsetY}px; background-repeat: no-repeat; image-rendering: pixelated;`;
+    }
+    return `background-image: url(${img.src}); background-position: -${offsetX}px -${offsetY}px; background-repeat: no-repeat; image-rendering: pixelated;`;
+  };
+
   return (
     <div
       {...rest}
+      role="button"
+      aria-label={`Tile ${control.tileIndex}`}
       data-tileset-id={control.tilesetIndex}
       data-tile-id={control.tileIndex}
-      style={`position: relative; display: inline-block; width: ${control.tileSize}px; height: ${control.tileSize}px; ${control.style}`}
+      style={`position: relative; display: inline-block; width: ${
+        control.tileSize
+      }px; height: ${control.tileSize}px; ${backgroundStyles()} ${
+        control.style
+      }`}
       class={`${staticStyles.tile} ${control.class}`}
     >
-      <Switch>
-        <Match when={control.img}>
-          <img
-            src={control.img.src}
-            alt={`Tile ${control.tileIndex}`}
-            style={`object-position: -${control.img.x * control.tileSize}px -${
-              control.img.y * control.tileSize
-            }px`}
-            class={staticStyles.tileImage}
-          />
-        </Match>
-        <Match when={!control.img}>
-          <span {...rest} class={staticStyles.tileImage} />
-        </Match>
-      </Switch>
-      <Show when={control.tint}>
-        <div
-          style={`background-color: ${control.tint}; mix-blend-mode: multiply; opacity: 0.7; width: 100%; height: 100%; position: absolute; top: 0; left: 0; pointer-events: none; ${control.style}`}
-        />
-      </Show>
+      {!control.img && <span class={staticStyles.tileImage} />}
     </div>
   );
 };
+
+// Convert hex color (#rgb or #rrggbb) to r,g,b string; fallback to magenta if invalid
+function hexToRgb(hex: string): string {
+  if (!hex) return "255,0,255"; // fallback
+  let value = hex.replace("#", "").trim();
+  if (value.length === 3) {
+    value = value
+      .split("")
+      .map((c) => c + c)
+      .join("");
+  }
+  if (value.length !== 6 || /[^0-9a-fA-F]/.test(value)) return "255,0,255";
+  const num = parseInt(value, 16);
+  const r = (num >> 16) & 255;
+  const g = (num >> 8) & 255;
+  const b = num & 255;
+  return `${r},${g},${b}`;
+}

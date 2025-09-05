@@ -1,7 +1,6 @@
 import { createStore, produce } from "solid-js/store";
 import { DropMode, TileIndex, TilesetIndex, Tileset, Tile } from "../types";
 import { debounce } from "../common/debounce";
-import { createMemo } from "solid-js";
 
 type SelectedTile = [TilesetIndex, TileIndex];
 
@@ -23,15 +22,11 @@ const initialState: TileMateStoreState = {
 
 const [store, setStore] = createStore(initialState);
 
-// Memoized list of existing tileset indices (numeric) for stable iteration order.
-// Not sorted intentionally; preserves insertion order.
-const tilesetIndicesMemo = createMemo<ReadonlyArray<TilesetIndex>>(() => {
-  // Object.keys preserves insertion order for non-integer-like keys; our indices are numbers but used as object keys.
-  // Convert to numbers once; consumers should treat as read-only.
+// List of existing tileset indices (numeric) for stable iteration order.
+// Kept as a simple function to avoid creating a memo outside a reactive root (which triggers dev leak warnings).
+export const tilesetIndices = (): ReadonlyArray<TilesetIndex> => {
   return Object.keys(store.tilesets).map((k) => Number(k)) as TilesetIndex[];
-});
-
-export const tilesetIndices = () => tilesetIndicesMemo();
+};
 
 export const tileset = (tilesetIndex: TilesetIndex): Tileset | undefined => {
   return store.tilesets[tilesetIndex];
