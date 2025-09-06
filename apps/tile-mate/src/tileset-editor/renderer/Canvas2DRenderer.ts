@@ -1,5 +1,6 @@
 import { ITilesetRenderer, RendererSceneState } from "./ITilesetRenderer";
 import { Tile } from "../../types";
+import { shiftTileRegion, clearColorShiftCaches } from "../colorShift";
 
 type ImageCacheEntry = { img: HTMLImageElement; loaded: boolean; error?: any };
 
@@ -13,6 +14,7 @@ export class Canvas2DRenderer implements ITilesetRenderer {
   private scene: RendererSceneState | undefined;
   private images = new Map<string, ImageCacheEntry>();
   private overlayNeedsFull = true;
+  private shiftedCache = new Map<string, HTMLCanvasElement>();
 
   init(cfg: {
     canvas: HTMLCanvasElement;
@@ -43,6 +45,7 @@ export class Canvas2DRenderer implements ITilesetRenderer {
       cfg.columns !== this.columns ||
       cfg.rows !== this.rows ||
       cfg.gap !== this.gap;
+    const sizeChanged = cfg.tileSize !== this.tileSize;
     this.tileSize = cfg.tileSize;
     this.columns = cfg.columns;
     this.rows = cfg.rows;
@@ -50,6 +53,10 @@ export class Canvas2DRenderer implements ITilesetRenderer {
     if (dimsChanged) {
       this.resizeCanvasToContent();
       if (this.scene) this.render(this.scene);
+    }
+    if (sizeChanged) {
+      this.shiftedCache.clear();
+      clearColorShiftCaches();
     }
   }
 
@@ -164,27 +171,33 @@ export class Canvas2DRenderer implements ITilesetRenderer {
       return;
     }
     try {
-      const sx = s.img.x * this.tileSize;
-      const sy = s.img.y * this.tileSize;
-      this.ctx.imageSmoothingEnabled = false;
-      this.ctx.drawImage(
-        entry.img,
-        sx,
-        sy,
-        this.tileSize,
-        this.tileSize,
-        x,
-        y,
-        this.tileSize,
-        this.tileSize
-      );
       if (s.tint) {
-        this.ctx.save();
-        this.ctx.globalCompositeOperation = "multiply";
-        this.ctx.globalAlpha = 0.7;
-        this.ctx.fillStyle = s.tint;
-        this.ctx.fillRect(x, y, this.tileSize, this.tileSize);
-        this.ctx.restore();
+        // target color stored in tint -> apply color shift vs dominant color
+        const shifted = shiftTileRegion(
+          entry.img,
+          this.tileSize,
+          s.img.x,
+          s.img.y,
+          s.tint,
+          this.shiftedCache
+        );
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.drawImage(shifted, x, y);
+      } else {
+        const sx = s.img.x * this.tileSize;
+        const sy = s.img.y * this.tileSize;
+        this.ctx.imageSmoothingEnabled = false;
+        this.ctx.drawImage(
+          entry.img,
+          sx,
+          sy,
+          this.tileSize,
+          this.tileSize,
+          x,
+          y,
+          this.tileSize,
+          this.tileSize
+        );
       }
     } catch {
       this.drawEmptyCell(x, y);
@@ -297,27 +310,31 @@ export class Canvas2DRenderer implements ITilesetRenderer {
     }
     const entry = this.images.get(s.img.src);
     if (!entry?.loaded) return;
-    const sx = s.img.x * this.tileSize;
-    const sy = s.img.y * this.tileSize;
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(
-      entry.img,
-      sx,
-      sy,
-      this.tileSize,
-      this.tileSize,
-      x,
-      y,
-      this.tileSize,
-      this.tileSize
-    );
     if (s.tint) {
-      ctx.save();
-      ctx.globalCompositeOperation = "multiply";
-      ctx.globalAlpha = 0.7;
-      ctx.fillStyle = s.tint;
-      ctx.fillRect(x, y, this.tileSize, this.tileSize);
-      ctx.restore();
+      const shifted = shiftTileRegion(
+        entry.img,
+        this.tileSize,
+        s.img.x,
+        s.img.y,
+        s.tint,
+        this.shiftedCache
+      );
+      ctx.drawImage(shifted, x, y);
+    } else {
+      const sx = s.img.x * this.tileSize;
+      const sy = s.img.y * this.tileSize;
+      ctx.drawImage(
+        entry.img,
+        sx,
+        sy,
+        this.tileSize,
+        this.tileSize,
+        x,
+        y,
+        this.tileSize,
+        this.tileSize
+      );
     }
   }
 
@@ -325,5 +342,7 @@ export class Canvas2DRenderer implements ITilesetRenderer {
     // presently nothing persistent; could revoke object URLs later
     this.images.clear();
     (this as any).scene = undefined;
+    this.shiftedCache.clear();
+    clearColorShiftCaches();
   }
 }

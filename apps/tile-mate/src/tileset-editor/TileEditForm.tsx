@@ -11,31 +11,32 @@ import { Input } from "../common/input/Input";
 import { TileIndex, TilesetIndex } from "../types";
 import { useTileMateStore } from "../store/TileMateStore";
 import staticStyles from "./TileEditForm.module.css";
+import { shiftTileRegion } from "./colorShift";
 
 type Props = {
   tilesetIndex: TilesetIndex;
   tileIndex: TileIndex;
-  initialTint?: string;
-  onAccept: (tint?: string) => void;
+  initialTint?: string; // legacy name retained for compatibility (represents target color)
+  onAccept: (tint?: string) => void; // tint here means target shift color
   onCancel: () => void;
 };
 
 export const TileEditForm: Component<Props> = (props) => {
   const { tile, tileSize } = useTileMateStore();
-  const [selectedTint, setSelectedTint] = createSignal<string>(
+  const [selectedTargetColor, setSelectedTargetColor] = createSignal<string>(
     props.initialTint ?? ""
   );
 
   const tileData = tile(props.tilesetIndex, props.tileIndex);
   const previewSize = tileSize(props.tilesetIndex); // Fixed larger size for modal preview
 
-  const handleTintChange = (color: string) => {
-    setSelectedTint(color);
+  const handleTargetColorChange = (color: string) => {
+    setSelectedTargetColor(color);
   };
 
   const handleAccept = () => {
-    const tint = selectedTint();
-    props.onAccept(tint || undefined);
+    const target = selectedTargetColor();
+    props.onAccept(target || undefined);
   };
 
   const handleCancel = () => {
@@ -43,13 +44,7 @@ export const TileEditForm: Component<Props> = (props) => {
   };
 
   // Create a copy of tile data with the selected tint for preview
-  const createTintedTileData = () => {
-    if (!tileData || !selectedTint()) return tileData;
-    return {
-      ...tileData,
-      tint: selectedTint(),
-    };
-  };
+  // Removed: color shifting is applied dynamically in canvas rendering based on dominant color.
 
   return (
     <Show when={tileData?.img}>
@@ -61,30 +56,29 @@ export const TileEditForm: Component<Props> = (props) => {
               tilesetIndex={props.tilesetIndex}
               tileIndex={props.tileIndex}
               tileSize={previewSize}
-              tint={undefined}
               class={staticStyles.previewTile}
             />
           </div>
           <div class={staticStyles.preview}>
-            <h3>Tinted Preview</h3>
+            <h3>Shifted Preview</h3>
             <CanvasTilePreview
               tilesetIndex={props.tilesetIndex}
               tileIndex={props.tileIndex}
               tileSize={previewSize}
-              tint={selectedTint() || undefined}
+              targetColor={selectedTargetColor() || undefined}
               class={staticStyles.previewTile}
             />
           </div>
         </div>
         <div class={staticStyles.colorSection}>
-          <label>Tint Color:</label>
+          <label>Target Color:</label>
           <Input
             type="color"
-            value={selectedTint()}
-            onInput={(e) => handleTintChange(e.currentTarget.value)}
+            value={selectedTargetColor()}
+            onInput={(e) => handleTargetColorChange(e.currentTarget.value)}
           />
-          <Show when={selectedTint()}>
-            <Button onClick={() => setSelectedTint("")}>Clear</Button>
+          <Show when={selectedTargetColor()}>
+            <Button onClick={() => setSelectedTargetColor("")}>Clear</Button>
           </Show>
         </div>
         <div class={staticStyles.actions}>
@@ -96,13 +90,13 @@ export const TileEditForm: Component<Props> = (props) => {
   );
 };
 
-// Canvas-based preview rendering ONLY the selected tile (neighbors removed for clarity).
-// Display size fixed to 64x64 while sampling the original tile region at its native tileSize, scaled pixel-perfect.
+// Canvas-based preview rendering ONLY the selected tile.
+// If a targetColor is provided, applies color shift vs dominant color of the tile region.
 const CanvasTilePreview: Component<{
   tilesetIndex: TilesetIndex;
   tileIndex: TileIndex;
   tileSize: number; // logical tile size
-  tint?: string; // optional override tint for central tile
+  targetColor?: string; // target color for shift
   class?: string;
 }> = (p) => {
   const { tile } = useTileMateStore();
@@ -121,12 +115,6 @@ const CanvasTilePreview: Component<{
   };
 
   const centerTile = () => tile(p.tilesetIndex, p.tileIndex);
-
-  const rgbaFromHex = (hex?: string, alpha: number = 0.7) => {
-    if (!hex) return undefined;
-    const rgb = hexToRgb(hex);
-    return `rgba(${rgb},${alpha})`;
-  };
 
   const draw = () => {
     const c = canvasRef;
@@ -158,30 +146,32 @@ const CanvasTilePreview: Component<{
     const sx = ct.img.x * tSize;
     const sy = ct.img.y * tSize;
     try {
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(
-        imgEl as HTMLImageElement,
-        sx,
-        sy,
-        tSize,
-        tSize,
-        0,
-        0,
-        DISPLAY_SIZE,
-        DISPLAY_SIZE
-      );
-    } catch (e) {}
-    const appliedTint = p.tint ?? ct.tint;
-    if (appliedTint) {
-      const rgba = rgbaFromHex(appliedTint);
-      if (rgba) {
-        ctx.save();
-        ctx.globalCompositeOperation = "multiply";
-        ctx.fillStyle = rgba;
-        ctx.fillRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE);
-        ctx.restore();
+      if (p.targetColor || ct.tint) {
+        const shifted = shiftTileRegion(
+          imgEl as HTMLImageElement,
+          tSize,
+          ct.img.x,
+          ct.img.y,
+          (p.targetColor || ct.tint) as string
+        );
+        // draw shifted tile scaled
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(shifted, 0, 0, DISPLAY_SIZE, DISPLAY_SIZE);
+      } else {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(
+          imgEl as HTMLImageElement,
+          sx,
+          sy,
+          tSize,
+          tSize,
+          0,
+          0,
+          DISPLAY_SIZE,
+          DISPLAY_SIZE
+        );
       }
-    }
+    } catch (e) {}
     // Outline (single pass)
     ctx.save();
     ctx.strokeStyle = "rgba(255,255,255,0.5)";
@@ -198,7 +188,7 @@ const CanvasTilePreview: Component<{
   createEffect(() => {
     // Depend on center & neighbor tiles' tint + provided tint override + tileSize
     const ct = centerTile();
-    p.tint; // dependency
+    p.targetColor; // dependency
     p.tileSize; // dependency
     if (ct && ct.img) {
       ct.tint; // center tint dependency
@@ -235,20 +225,4 @@ const CanvasTilePreview: Component<{
   );
 };
 
-// Simple hex (#rgb/#rrggbb) to r,g,b string converter
-function hexToRgb(hex: string): string {
-  if (!hex) return "255,0,255";
-  let value = hex.replace("#", "").trim();
-  if (value.length === 3) {
-    value = value
-      .split("")
-      .map((c) => c + c)
-      .join("");
-  }
-  if (value.length !== 6 || /[^0-9a-fA-F]/.test(value)) return "255,0,255";
-  const num = parseInt(value, 16);
-  const r = (num >> 16) & 255;
-  const g = (num >> 8) & 255;
-  const b = num & 255;
-  return `${r},${g},${b}`;
-}
+// (Deprecated local hexToRgb & multiply tint logic removed – using shared colorShift utilities.)
