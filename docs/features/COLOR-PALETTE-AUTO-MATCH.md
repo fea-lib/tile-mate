@@ -15,7 +15,7 @@ Enable users to paste a JSON color palette, auto‑match colors to tiles based o
 **Out:** persistent palette history, undo after apply, non-destructive multi-branch experimentation, original pixel preservation.
 
 ### 3. Data Structures
-**Tile augmentation (runtime only, non-reactive):** `(tile as any)._dom?: [r,g,b]` (current dominant). Stored via direct mutation, not serialized.
+**Tile augmentation (runtime only, non-reactive):** `(tile as any).dominantcolor?: [r,g,b]` (current dominant). Stored via direct mutation, not serialized.
 
 **Ephemeral palette session (component signals, not in store):**
 ```
@@ -73,7 +73,7 @@ flowchart LR
     TINT[tile.tint]
   end
   subgraph TileObj[Tile Object (runtime)]
-    DOM[_dom RGB]
+    DOM[dominantcolor RGB]
   end
   RAW --> PC --> ASG --> PREV
   ASG -->|Apply| TINT
@@ -88,7 +88,7 @@ flowchart LR
 1. User pastes palette JSON.
 2. Parse & validate (object `{ name: hex }` or array `[hex,...]`). Normalize hex (#RRGGBB). Expand #RGB.
 3. Deduplicate identical hex (mark later ones `duplicateOf`, status `unassigned`). Collect errors/warnings.
-4. Ensure tile dominants: compute if missing/invalidated using current canvas pixels; store in `_dom`.
+4. Ensure tile dominants: compute if missing/invalidated using current canvas pixels; store in `dominantcolor`.
 5. Build distance matrix (palette ↔ tiles) using OKLab ΔE (fallback weighted HSL); apply grayscale penalty.
 6. Auto assign (Hungarian if feasible; else greedy). Partial assignment allowed if palette > tiles.
 7. Record assignments with distance + confidence (normalized 0..1).
@@ -114,7 +114,7 @@ sequenceDiagram
   P->>P: Parse & Validate
   P->>R: Request tile pixel data
   R-->>P: ImageData per tile
-  P->>T: (mutate) _dom cache
+  P->>T: (mutate) dominantcolor cache
   P->>P: Build distance matrix
   P->>P: Hungarian / Greedy match
   U->>P: Toggle Preview
@@ -234,7 +234,7 @@ ASCII wireframe:
 - `unassigned`: Not mapped to any tile.
 
 ### 11. Invalidation Rules
-Recompute dominant (`_dom = undefined` first) if:
+Recompute dominant (`dominantcolor = undefined` first) if:
 - Tile recreated due to resize (columns/rows/tileSize changes causing `createTiles`).
 - Tile loses or gains an `img` reference.
 Apply stage: either clear or recompute dominants immediately from post-shift pixels.
