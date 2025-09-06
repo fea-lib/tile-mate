@@ -1,4 +1,11 @@
-import { type Component, createSignal, Show } from "solid-js";
+import {
+  type Component,
+  createSignal,
+  Show,
+  onMount,
+  onCleanup,
+  createEffect,
+} from "solid-js";
 import { Button } from "../common/button/Button";
 import { Input } from "../common/input/Input";
 import { TileIndex, TilesetIndex } from "../types";
@@ -50,41 +57,25 @@ export const TileEditForm: Component<Props> = (props) => {
         <div class={staticStyles.previewSection}>
           <div class={staticStyles.preview}>
             <h3>Original</h3>
-            <PreviewImage
+            <CanvasTilePreview
               tilesetIndex={props.tilesetIndex}
               tileIndex={props.tileIndex}
               tileSize={previewSize}
-              img={tileData.img}
+              tint={undefined}
               class={staticStyles.previewTile}
             />
           </div>
-
           <div class={staticStyles.preview}>
             <h3>Tinted Preview</h3>
-            <Show
-              when={selectedTint()}
-              fallback={
-                <PreviewImage
-                  tilesetIndex={props.tilesetIndex}
-                  tileIndex={props.tileIndex}
-                  tileSize={previewSize!}
-                  img={tileData.img}
-                  class={`${staticStyles.previewTile} ${staticStyles.noTint}`}
-                />
-              }
-            >
-              <PreviewImage
-                tilesetIndex={props.tilesetIndex}
-                tileIndex={props.tileIndex}
-                tileSize={previewSize}
-                img={tileData.img}
-                tint={createTintedTileData().tint}
-                class={staticStyles.previewTile}
-              />
-            </Show>
+            <CanvasTilePreview
+              tilesetIndex={props.tilesetIndex}
+              tileIndex={props.tileIndex}
+              tileSize={previewSize}
+              tint={selectedTint() || undefined}
+              class={staticStyles.previewTile}
+            />
           </div>
         </div>
-
         <div class={staticStyles.colorSection}>
           <label>Tint Color:</label>
           <Input
@@ -96,7 +87,6 @@ export const TileEditForm: Component<Props> = (props) => {
             <Button onClick={() => setSelectedTint("")}>Clear</Button>
           </Show>
         </div>
-
         <div class={staticStyles.actions}>
           <Button onClick={handleCancel}>Cancel</Button>
           <Button onClick={handleAccept}>Accept</Button>
@@ -106,50 +96,140 @@ export const TileEditForm: Component<Props> = (props) => {
   );
 };
 
-// Local minimal Image preview component (decoupled from legacy Tile.tsx)
-const PreviewImage: Component<{
-  tilesetIndex: TilesetIndex; // kept for potential future a11y labels
+// Canvas-based preview rendering ONLY the selected tile (neighbors removed for clarity).
+// Display size fixed to 64x64 while sampling the original tile region at its native tileSize, scaled pixel-perfect.
+const CanvasTilePreview: Component<{
+  tilesetIndex: TilesetIndex;
   tileIndex: TileIndex;
-  tileSize: number;
-  img?: { src: string; x: number; y: number };
-  tint?: string;
+  tileSize: number; // logical tile size
+  tint?: string; // optional override tint for central tile
   class?: string;
 }> = (p) => {
-  const size = () => `${p.tileSize}px`;
-  const style = () => {
-    const base: Record<string, string> = {
-      width: size(),
-      height: size(),
-      position: "relative",
-      display: "inline-block",
-      "image-rendering": "pixelated",
-      contain: "layout paint style",
-      "background-color": "transparent",
-      "background-blend-mode": "normal",
-    };
-    if (!p.img) {
-      base["background"] =
-        "repeating-conic-gradient(#444 0% 25%, #333 0% 50%) 50% / 8px 8px";
-      return base;
+  const { tile } = useTileMateStore();
+  let canvasRef: HTMLCanvasElement | undefined;
+  let imgEl: HTMLImageElement | undefined;
+  const DISPLAY_SIZE = 64; // fixed preview dimension
+
+  // Load the shared sprite sheet once (based on central tile's img.src)
+  const loadImage = (src: string) => {
+    if (imgEl && imgEl.src === src) return;
+    imgEl = new Image();
+    imgEl.src = src;
+    if (!imgEl.complete) {
+      imgEl.onload = () => draw();
     }
-    const offsetX = p.img.x * p.tileSize;
-    const offsetY = p.img.y * p.tileSize;
-    base["background-image"] = `url(${p.img.src})`;
-    base["background-position"] = `-${offsetX}px -${offsetY}px`;
-    base["background-repeat"] = "no-repeat";
-    if (p.tint) {
-      const rgb = hexToRgb(p.tint);
-      base["background-color"] = `rgba(${rgb},0.7)`;
-      base["background-blend-mode"] = "multiply";
-    }
-    return base;
   };
+
+  const centerTile = () => tile(p.tilesetIndex, p.tileIndex);
+
+  const rgbaFromHex = (hex?: string, alpha: number = 0.7) => {
+    if (!hex) return undefined;
+    const rgb = hexToRgb(hex);
+    return `rgba(${rgb},${alpha})`;
+  };
+
+  const draw = () => {
+    const c = canvasRef;
+    if (!c) return;
+    const ctx = c.getContext("2d");
+    if (!ctx) return;
+    const ct = centerTile();
+    if (!ct || !ct.img) {
+      ctx.clearRect(0, 0, c.width, c.height);
+      // Checkerboard background if missing
+      const size = 8;
+      for (let y = 0; y < c.height; y += size) {
+        for (let x = 0; x < c.width; x += size) {
+          ctx.fillStyle = (x / size + y / size) % 2 === 0 ? "#444" : "#333";
+          ctx.fillRect(x, y, size, size);
+        }
+      }
+      return;
+    }
+    loadImage(ct.img.src);
+    if (!imgEl) return; // will retry on load
+    const tSize = p.tileSize; // source tile pixel size in spritesheet
+    // Ensure canvas bitmap matches display size (fixed 64x64)
+    const targetW = DISPLAY_SIZE;
+    const targetH = DISPLAY_SIZE;
+    if (c.width !== targetW) c.width = targetW;
+    if (c.height !== targetH) c.height = targetH;
+
+    const sx = ct.img.x * tSize;
+    const sy = ct.img.y * tSize;
+    try {
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(
+        imgEl as HTMLImageElement,
+        sx,
+        sy,
+        tSize,
+        tSize,
+        0,
+        0,
+        DISPLAY_SIZE,
+        DISPLAY_SIZE
+      );
+    } catch (e) {}
+    const appliedTint = p.tint ?? ct.tint;
+    if (appliedTint) {
+      const rgba = rgbaFromHex(appliedTint);
+      if (rgba) {
+        ctx.save();
+        ctx.globalCompositeOperation = "multiply";
+        ctx.fillStyle = rgba;
+        ctx.fillRect(0, 0, DISPLAY_SIZE, DISPLAY_SIZE);
+        ctx.restore();
+      }
+    }
+    // Outline (single pass)
+    ctx.save();
+    ctx.strokeStyle = "rgba(255,255,255,0.5)";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(0.5, 0.5, DISPLAY_SIZE - 1, DISPLAY_SIZE - 1);
+    ctx.restore();
+  };
+
+  onMount(() => {
+    draw();
+  });
+
+  // Redraw on reactive dependencies
+  createEffect(() => {
+    // Depend on center & neighbor tiles' tint + provided tint override + tileSize
+    const ct = centerTile();
+    p.tint; // dependency
+    p.tileSize; // dependency
+    if (ct && ct.img) {
+      ct.tint; // center tint dependency
+    }
+    draw();
+  });
+
+  onCleanup(() => {
+    // Nothing persistent to cleanup beyond letting GC reclaim image
+    imgEl = undefined as any;
+  });
+
+  const style = () => ({
+    width: `${DISPLAY_SIZE}px`,
+    height: `${DISPLAY_SIZE}px`,
+    display: "inline-block",
+    "image-rendering": "pixelated",
+    contain: "layout paint style",
+    background:
+      "repeating-conic-gradient(#444 0% 25%, #333 0% 50%) 50% / 8px 8px",
+  });
+
   return (
-    <div
+    <canvas
+      ref={canvasRef}
       class={p.class}
+      width={DISPLAY_SIZE}
+      height={DISPLAY_SIZE}
+      style={style() as any}
       role="img"
       aria-label={`Tile ${p.tileIndex}`}
-      style={style()}
       data-preview-tile
     />
   );
